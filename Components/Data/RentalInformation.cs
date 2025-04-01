@@ -1,0 +1,32 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace VillageRental.Components.Data
+{
+    public class RentalInformation
+    {
+        public int RentalID { get; set; }
+        public DateTime CurrentDate { get; set; }
+        public int CustomerID { get; set; }
+        public string CustomerLastName { get; set; }
+        private List<RentalItem> rentalItemList;
+        public string RentalStatus { get; set; }
+        public double TotalCostToRent { get; set; }
+
+        public RentalInformation(int _rentalID, DateTime _currentDate, int _customerID, string _customerLastName, string _rentalStatus)
+        {
+            RentalID = _rentalID;
+            CurrentDate = _currentDate;
+            CustomerID = _customerID;
+            CustomerLastName = _customerLastName;
+        }
+
+        public void AddRentalItem(RentalItem _item)
+        {
+            rentalItemList.Add(_item);
+        }
+    }
+}
