@@ -60,6 +60,13 @@ namespace VillageRental.Components.Instances
             }
         }
 
+        public void BanCustomer(int _customerId)
+        {
+            Customer customerFound = FindCustomer(_customerId);
+            if (customerFound != null)
+                customerFound.SetBan(true);
+        }
+
         #endregion
 
         #region Equipment Management Functions
@@ -76,6 +83,13 @@ namespace VillageRental.Components.Instances
                 equipmentFound.SetInInventory(false);
         }
 
+        public void SellEquipment(int _equipmentID, double _priceToSell)
+        {
+            Equipment equipmentFound = FindEquipment(_equipmentID);
+            if (equipmentFound != null)
+                equipmentFound.SetIsSold(true);
+        }
+
         public Equipment FindEquipment(int _equipmentID)
         {
             foreach(Equipment equipment in equipmentList)
@@ -88,5 +102,37 @@ namespace VillageRental.Components.Instances
         }
 
         #endregion
+
+        #region Category Management Functions
+
+        public void AddNewCategory(CategoryItem _newCategoryItem)
+        {
+            categoryList.Add(_newCategoryItem);
+        }
+
+        public void RemoveCategory(int _categoryID)
+        {
+            CategoryItem categoryFound = FindCategory(_categoryID);
+            if(categoryFound != null)
+                categoryList.Remove(categoryFound);
+        }
+
+        public CategoryItem FindCategory(int _categoryID)
+        {
+            foreach(CategoryItem categoryItem in categoryList)
+            {
+                if(categoryItem.CategoryID == _categoryID)
+                    return categoryItem;
+            }
+
+            return null;
+        }
+
+        #endregion
+
+        public void RentItem(RentalInformation _rentalInformation)
+        {
+            rentalInformationList.Add(_rentalInformation);
+        }
     }
 }
