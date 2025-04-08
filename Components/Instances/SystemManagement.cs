@@ -11,6 +11,8 @@ namespace VillageRental.Components.Instances
     {
 		public static string CategoryContent = "10;Power tools\r\n20;Yard equipment\r\n30;Compressors\r\n40;Generators\r\n50;Air Tools";
         public static string RentalInformationContent = "101;10;Hammer drill;Powerful drill for concrete and masonry;25,99;\r\n201;20;Chainsaw;Gas-powered chainsaw for cutting wood;49,99;\r\n202;20;Lawn mower;Self-propelled lawn mower with mulching function;19,99;\r\n301;30;Small Compressor;5 Gallon Compressor-Portable;14,99;\r\n501;50;Brad Nailer;Brad Nailer. Requires 3/4 to 1 1/2 Brad Nails;10,99;";
+        public static string CustomerContent = "1001;Doe;John;(555) 555-1212;jd@sample.net;False\r\n1002;Smith;Jane;(555) 555-3434;js@live.com;False\r\n1003;Lee;Michael;(555) 555-5656;ml@sample.net;False";
+        public static string EquipmentContent = "101;10;Hammer drill;Powerful drill for concrete and masonry;25,99;1;Good\r\n201;20;Chainsaw;Gas-powered chainsaw for cutting wood;49,99;1;Good\r\n202;20;Lawn mower;Self-propelled lawn mower with mulching function;19,99;1;Good\r\n301;30;Small Compressor;5 Gallon Compressor-Portable;14,99;1;Good\r\n501;50;Brad Nailer;Brad Nailer. Requires 3/4 to 1 1/2 Brad Nails;10,99;1;Good";
 	}
 
     public class SystemManagement
@@ -33,6 +35,9 @@ namespace VillageRental.Components.Instances
             {
                 string fileCategoryPath = FileSystem.Current.AppDataDirectory + "\\category.txt";
                 string fileRentalInformationPath = FileSystem.Current.AppDataDirectory + "\\rental_information.txt";
+                string fileCustomerPath = FileSystem.Current.AppDataDirectory + "\\customer.txt";
+                string fileEquipmentPath = FileSystem.Current.AppDataDirectory + "\\equipment.txt";
+
                 if (overwriteExampleDataOnStart)
                 {
                     using (StreamWriter stream = File.CreateText(fileCategoryPath))
@@ -43,6 +48,16 @@ namespace VillageRental.Components.Instances
                     using (StreamWriter stream = File.CreateText(fileRentalInformationPath))
                     {
                         stream.Write(ExampleData.RentalInformationContent);
+                    }
+
+                    using (StreamWriter stream = File.CreateText(fileCustomerPath))
+                    {
+                        stream.Write(ExampleData.CustomerContent);
+                    }
+
+                    using (StreamWriter stream = File.CreateText(fileEquipmentPath))
+                    {
+                        stream.Write(ExampleData.EquipmentContent);
                     }
                 }
 
@@ -56,6 +71,41 @@ namespace VillageRental.Components.Instances
 
                         CategoryItem categoryItem = new CategoryItem(categoryId, categoryDescription);
                         AddNewCategory(categoryItem);
+                    }
+                }
+
+                using (StreamReader stream = File.OpenText(fileCustomerPath))
+                {
+                    while (!stream.EndOfStream)
+                    {
+                        string[] content = stream.ReadLine().Trim().Split(';');
+                        int customerId = Convert.ToInt32(content[0]);
+                        string lastName = content[1];
+                        string firstName = content[2];
+                        string phoneNumber = content[3];
+                        string email = content[4];
+                        bool isBanned = Convert.ToBoolean(content[5]);
+
+                        Customer customerData = new Customer(customerId, lastName, firstName, phoneNumber, email, isBanned);
+                        AddCustomerToList(customerData);
+                    }
+                }
+
+                using (StreamReader stream = File.OpenText(fileEquipmentPath))
+                {
+                    while (!stream.EndOfStream)
+                    {
+                        string[] content = stream.ReadLine().Trim().Split(';');
+                        int equipmentId = Convert.ToInt32(content[0]);
+                        int categoryId = Convert.ToInt32(content[1]);
+                        string name = content[2];
+                        string description = content[3];
+                        double dailyRentalCost = Convert.ToDouble(content[4]);
+                        int quantity = Convert.ToInt32(content[5]);
+                        string status = content[6];
+
+                        Equipment newEquipment = new Equipment(equipmentId, categoryId, name, description, dailyRentalCost, quantity, status);
+                        AddEquipmentToList(newEquipment);
                     }
                 }
             }

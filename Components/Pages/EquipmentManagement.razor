@@ -26,7 +26,7 @@
 				<!--Insert a foreach to display each button/link here -->
 				@foreach(Equipment equipment in equipmentSearchResultList)
 				{
-					<p @onclick="() => SetCurrentEquipment(equipment)">Equipment ID: @equipment.EquipmentID | Equipment Name: @equipment.Name</p>
+					<p class="m-3" @onclick="() => SetCurrentEquipment(equipment)">Equipment ID: @equipment.EquipmentID | Equipment Name: @equipment.Name</p>
 				}
 				<p>@searchResult</p>
 			</div>
@@ -50,19 +50,7 @@
 				<div class="col-sm-9">
 					<input type="text" class="form-control" id="categoryID" value="@categoryID" @onchange="(ChangeEventArgs __e) => {
 							categoryID = __e.Value.ToString();
-							if(!string.IsNullOrEmpty(categoryID)) 
-							{ 
-								CategoryItem getCategory = sysManagement.FindCategory(Convert.ToInt32(categoryID));								
-
-								if(getCategory != null)
-									equipmentCategoryText = getCategory.Description;
-								else
-									equipmentCategoryText = notFoundCategoryMessage;
-							}
-							else
-							{
-								equipmentCategoryText = string.Empty;
-							}
+							UpdateCategoryText();
 						}" 
 					/>
 				</div>
@@ -137,6 +125,23 @@
 		currentEquipment = null;
 	}
 
+	private void UpdateCategoryText()
+	{
+		if (!string.IsNullOrEmpty(categoryID))
+		{
+			CategoryItem getCategory = sysManagement.FindCategory(Convert.ToInt32(categoryID));
+
+			if (getCategory != null)
+				equipmentCategoryText = getCategory.Description;
+			else
+				equipmentCategoryText = notFoundCategoryMessage;
+		}
+		else
+		{
+			equipmentCategoryText = string.Empty;
+		}
+	}
+
 	private void SetCurrentEquipment(Equipment _currentEquipment)
 	{
 		currentEquipment = _currentEquipment;
@@ -148,6 +153,8 @@
 		dailyRentalCost = currentEquipment.DailyRentalCost.ToString();
 		quantity = currentEquipment.AvailableQuantity.ToString();
 		equipmentStatus = currentEquipment.EquipmentStatus.ToString();
+
+		UpdateCategoryText();
 	}
 
 	private void FindEquipment()

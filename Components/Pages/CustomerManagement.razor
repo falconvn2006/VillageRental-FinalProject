@@ -25,7 +25,7 @@
 				<!--Insert a foreach to display each button/link here -->
 				@foreach(Customer customer in customerSearchResult)
 				{
-					<p @onclick="() => SetCurrentCustomer(customer)">CustomerID: @customer.CustomerID, Customer First Name: @customer.FirstName</p>
+					<p class="m-3" @onclick="() => SetCurrentCustomer(customer)">CustomerID: @customer.CustomerID, Customer First Name: @customer.FirstName</p>
 				}
 				<p>@searchStatus</p>
 			</div>
