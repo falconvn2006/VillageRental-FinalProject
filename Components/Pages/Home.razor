@@ -1,5 +1,14 @@
 ﻿@page "/"
+@using VillageRental.Components.Instances
+@using VillageRental.Components.Data
+@inject SystemManagement sysManagement
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+<p>The application is currently storing it's data in this path: "@applicationStoragePath"</p><br/>
+<p>Loaded @sysManagement.categoryList.Count category into the system</p><br/>
+@code{
+	private string applicationStoragePath = FileSystem.Current.AppDataDirectory;
+}

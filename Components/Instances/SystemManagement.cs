@@ -7,9 +7,15 @@ using VillageRental.Components.Data;
 
 namespace VillageRental.Components.Instances
 {
-    public class SystemManagement
+    public static class ExampleData
     {
-        public bool loadExampleData = true;
+		public static string CategoryContent = "10;Power tools\r\n20;Yard equipment\r\n30;Compressors\r\n40;Generators\r\n50;Air Tools";
+        public static string RentalInformationContent = "101;10;Hammer drill;Powerful drill for concrete and masonry;25,99;\r\n201;20;Chainsaw;Gas-powered chainsaw for cutting wood;49,99;\r\n202;20;Lawn mower;Self-propelled lawn mower with mulching function;19,99;\r\n301;30;Small Compressor;5 Gallon Compressor-Portable;14,99;\r\n501;50;Brad Nailer;Brad Nailer. Requires 3/4 to 1 1/2 Brad Nails;10,99;";
+	}
+
+	public class SystemManagement
+    {
+        public bool loadExampleData = true, overwriteExampleDataOnStart = true;
 
         public List<Customer> customerList;
 		public List<Equipment> equipmentList;
@@ -25,8 +31,34 @@ namespace VillageRental.Components.Instances
 
             if(loadExampleData)
             {
+				string fileCategoryPath = FileSystem.Current.AppDataDirectory + "\\category.txt";
+                string fileRentalInformationPath = FileSystem.Current.AppDataDirectory + "\\rental_information.txt";
+				if (overwriteExampleDataOnStart)
+                {
+                    using (StreamWriter stream = File.CreateText(fileCategoryPath))
+                    {
+                        stream.Write(ExampleData.CategoryContent);
+                    }
 
-            }
+					using (StreamWriter stream = File.CreateText(fileRentalInformationPath))
+					{
+						stream.Write(ExampleData.RentalInformationContent);
+					}
+				}
+
+                using(StreamReader stream = File.OpenText(fileCategoryPath))
+                {
+                    while(!stream.EndOfStream)
+                    {
+						string[] content = stream.ReadLine().Trim().Split(';');
+                        int categoryId = Convert.ToInt32(content[0]);
+                        string categoryDescription = content[1];
+
+                        CategoryItem categoryItem = new CategoryItem(categoryId, categoryDescription);
+                        AddNewCategory(categoryItem);
+					}
+                }
+			}
         }
 
         #region Customer Management Functions
