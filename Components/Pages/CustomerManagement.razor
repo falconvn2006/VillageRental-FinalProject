@@ -1,4 +1,7 @@
 ﻿@page "/customermanagement"
+@using VillageRental.Components.Instances
+@using VillageRental.Components.Data
+@inject SystemManagement sysManagement
 <h3 class="text-center">Customer Management</h3>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
@@ -7,7 +10,7 @@
 		<div>
 			<p class="d-inline">Search by</p>
 			<select class="form-select d-inline" @bind="searchFilter">
-				<option value="CustomerID">Customer ID</option>
+				<option selected value="CustomerID">Customer ID</option>
 				<option value="LastName">Last Name</option>
 				<option value="Email">Email</option>
 			</select>
@@ -15,13 +18,18 @@
 		<hr />
 		<div class="text-center">
 			<div class="input-group mb-3">
-				<input type="text" class="form-control" placeholder="Enter you parameter" />
-				<button class="btn btn-primary" type="button">Search</button>
+				<input type="text" class="form-control" placeholder="Enter you parameter" @bind="searchFieldValue" />
+				<button class="btn btn-primary" type="button" @onclick="FindCustomer">Search</button>
 			</div>
-			<div class="bg-white ">
+			<div class="bg-white rounded-3 overflow-auto">
 				<!--Insert a foreach to display each button/link here -->
+				@foreach(Customer customer in customerSearchResult)
+				{
+					<p @onclick="() => SetCurrentCustomer(customer)">CustomerID: @customer.CustomerID, Customer First Name: @customer.FirstName</p><br />
+				}
+				<p>@searchStatus</p>
 			</div>
-			<button class="btn btn-primary">
+			<button class="btn btn-primary" @onclick="ClearResult">
 				Clear Result
 			</button>
 		</div>
@@ -33,47 +41,47 @@
 			<div class="mb-3 row">
 				<label for="customerID" class="col-sm-3 col-form-label">Customer ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="customerID" />
+					<input type="text" class="form-control" id="customerID" @bind="customerID" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="firstName" class="col-sm-3 col-form-label">First Name</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="firstName" />
+					<input type="text" class="form-control" id="firstName" @bind="firstName" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="lastName" class="col-sm-3 col-form-label">Last Name</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="lastName" />
+					<input type="text" class="form-control" id="lastName" @bind="lastName" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="phoneNumber" class="col-sm-3 col-form-label">Phone Number</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="phoneNumber" />
+					<input type="text" class="form-control" id="phoneNumber" @bind="phoneNumber" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="email" class="col-sm-3 col-form-label">Email</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="email" />
+					<input type="text" class="form-control" id="email" @bind="email" />
 				</div>
 			</div>
 			<div class="form-check form-check-reverse">
 				<label class="form-check-label" for="banned">Banned</label>
-				<input class="form-check-input" type="checkbox" id="banned" disabled />
+				<input class="form-check-input" type="checkbox" id="banned" @bind="banned" disabled />
 			</div>
 			<div class="container gap-4 text-center">
 				<div class="row">
 					<div class="col">
-						<button class="btn btn-primary">Save</button>
-						<button class="btn btn-primary">Ban Customer</button>
+						<button class="btn btn-primary" @onclick="CreateCustomer">Save</button>
+						<button class="btn btn-primary" @onclick="BanCustomer">Ban Customer</button>
 					</div>
 				</div>
 				<div class="row mt-2">
 					<div class="col">
-						<button class="btn btn-primary">Clear</button>
+						<button class="btn btn-primary" @onclick="ClearCustomerInformation">Clear</button>
 						<button class="btn btn-primary">Delete Record</button>
 					</div>
 				</div>
@@ -85,4 +93,105 @@
 
 @code {
 	private string searchFilter = "CustomerID";
+	private string searchFieldValue = string.Empty;
+
+	private Customer? currentCustomer;
+	private List<Customer> customerSearchResult = new List<Customer>();
+
+	private string searchStatus = "";
+
+	private string customerID, firstName, lastName, phoneNumber, email;
+	private bool banned = false;
+
+	private void FindCustomer()
+	{
+		if (string.IsNullOrEmpty(searchFieldValue))
+			return;
+
+		switch(searchFilter)
+		{
+			case "CustomerID":
+				customerSearchResult = sysManagement.FindCustomerMultipleResult(Convert.ToInt32(searchFieldValue));
+				break;
+			case "LastName":
+				customerSearchResult = sysManagement.FindCustomerMultipleResultByLastName(searchFieldValue);
+				break;
+			case "Email":
+				customerSearchResult = sysManagement.FindCustomerMultipleResultByEmail(searchFieldValue);
+				break;
+			default:
+				break;
+		}
+
+		if(customerSearchResult.Count == 0)
+		{
+			searchStatus = "Not Found";
+		}
+		else
+		{
+			searchStatus = "";
+		}
+	}
+
+	private void SetCurrentCustomer(Customer _customer)
+	{
+		currentCustomer = _customer;
+
+		customerID = currentCustomer.CustomerID.ToString();
+		firstName = currentCustomer.FirstName;
+		lastName = currentCustomer.LastName;
+		phoneNumber = currentCustomer.PhoneNumber;
+		email = currentCustomer.Email;
+		banned = currentCustomer.isBanned;
+	}
+
+	private void ClearResult()
+	{
+		customerSearchResult = new List<Customer>();
+		searchStatus = "";
+	}
+
+	private void ClearCustomerInformation()
+	{
+		currentCustomer = null;
+		customerID = firstName = lastName = phoneNumber = email = string.Empty;
+		banned = false;
+	}
+
+	private void BanCustomer()
+	{
+		if (currentCustomer == null)
+			return;
+
+		sysManagement.BanCustomer(currentCustomer.CustomerID);
+		SetCurrentCustomer(currentCustomer);
+	}
+
+	private void CreateCustomer()
+	{
+		if (string.IsNullOrEmpty(customerID) || string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName) || string.IsNullOrEmpty(phoneNumber) || string.IsNullOrEmpty(email))
+			return;
+
+		if(currentCustomer == null)
+		{
+			Customer newCustomer = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
+			sysManagement.AddCustomerToList(newCustomer);
+
+			Application.Current.MainPage.DisplayAlert("Debug", "Customer Created!", "OK");
+
+			customerID = string.Empty;
+			firstName = string.Empty;
+			lastName = string.Empty;
+			phoneNumber = string.Empty;
+			email = string.Empty;
+			currentCustomer = null;
+		}
+		else
+		{
+			Customer newCustomerData = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
+			sysManagement.UpdateCustomer(currentCustomer.CustomerID, newCustomerData);
+
+			Application.Current.MainPage.DisplayAlert("Debug", "Customer Updated!", "OK");
+		}
+	}
 }

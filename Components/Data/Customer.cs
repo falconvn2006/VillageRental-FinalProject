@@ -13,7 +13,7 @@ namespace VillageRental.Components.Data
         public string FirstName { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
-        private bool isBanned;
+        public bool isBanned;
 
         public Customer(int _customerID, string _lastName, string _firstName, string _phoneNumber, string _email) 
         { 

@@ -9,17 +9,24 @@ namespace VillageRental.Components.Instances
 {
     public class SystemManagement
     {
-        public static SystemManagement Instance;
+        public bool loadExampleData = true;
 
-        private List<Customer> customerList;
-        private List<Equipment> equipmentList;
-        private List<CategoryItem> categoryList;
-        private List<RentalInformation> rentalInformationList;
+        public List<Customer> customerList;
+		public List<Equipment> equipmentList;
+		public List<CategoryItem> categoryList;
+		public List<RentalInformation> rentalInformationList;
 
         public SystemManagement()
         {
-            if(Instance == null)
-                Instance = new SystemManagement();
+            customerList = new List<Customer>();
+            equipmentList = new List<Equipment>();
+            categoryList = new List<CategoryItem>();
+            rentalInformationList = new List<RentalInformation>();
+
+            if(loadExampleData)
+            {
+
+            }
         }
 
         #region Customer Management Functions
@@ -51,7 +58,52 @@ namespace VillageRental.Components.Instances
             return null;
         }
 
-        public void RemoveCustomer(int _customerId)
+        public List<Customer> FindCustomerMultipleResult(int _customerId)
+        {
+            List<Customer> customerResultList = new List<Customer>();
+
+			foreach (Customer customer in customerList)
+			{
+				if (customer.CustomerID == _customerId)
+				{
+					customerResultList.Add(customer);
+				}
+			}
+
+			return customerResultList;
+		}
+
+		public List<Customer> FindCustomerMultipleResultByLastName(string _lastName)
+		{
+			List<Customer> customerResultList = new List<Customer>();
+
+			foreach (Customer customer in customerList)
+			{
+				if (customer.LastName == _lastName)
+				{
+					customerResultList.Add(customer);
+				}
+			}
+
+			return customerResultList;
+		}
+
+		public List<Customer> FindCustomerMultipleResultByEmail(string _email)
+		{
+			List<Customer> customerResultList = new List<Customer>();
+
+			foreach (Customer customer in customerList)
+			{
+				if (customer.Email == _email)
+				{
+					customerResultList.Add(customer);
+				}
+			}
+
+			return customerResultList;
+		}
+
+		public void RemoveCustomer(int _customerId)
         {
             Customer foundCustomer = FindCustomer(_customerId);
             if (foundCustomer != null)
