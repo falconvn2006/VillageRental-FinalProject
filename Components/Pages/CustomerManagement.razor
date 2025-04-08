@@ -25,11 +25,11 @@
 				<!--Insert a foreach to display each button/link here -->
 				@foreach(Customer customer in customerSearchResult)
 				{
-					<p @onclick="() => SetCurrentCustomer(customer)">CustomerID: @customer.CustomerID, Customer First Name: @customer.FirstName</p><br />
+					<p @onclick="() => SetCurrentCustomer(customer)">CustomerID: @customer.CustomerID, Customer First Name: @customer.FirstName</p>
 				}
 				<p>@searchStatus</p>
 			</div>
-			<button class="btn btn-primary" @onclick="ClearResult">
+			<button class="btn btn-primary mt-3" @onclick="ClearResult">
 				Clear Result
 			</button>
 		</div>
@@ -82,7 +82,7 @@
 				<div class="row mt-2">
 					<div class="col">
 						<button class="btn btn-primary" @onclick="ClearCustomerInformation">Clear</button>
-						<button class="btn btn-primary">Delete Record</button>
+						<button class="btn btn-primary" @onclick="DeleteCustomerRecord">Delete Record</button>
 					</div>
 				</div>
 			</div>
@@ -193,5 +193,23 @@
 
 			Application.Current.MainPage.DisplayAlert("Debug", "Customer Updated!", "OK");
 		}
+	}
+
+	private void DeleteCustomerRecord()
+	{
+		if (currentCustomer == null)
+			return;
+
+		sysManagement.RemoveCustomer(currentCustomer.CustomerID);
+		customerID = string.Empty;
+		firstName = string.Empty;
+		lastName = string.Empty;
+		phoneNumber = string.Empty;
+		email = string.Empty;
+		currentCustomer = null;
+
+		ClearResult();
+
+		Application.Current.MainPage.DisplayAlert("Debug", "Customer Record Deleted!", "OK");
 	}
 }

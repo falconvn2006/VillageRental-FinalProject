@@ -15,7 +15,6 @@ namespace VillageRental.Components.Data
         public double DailyRentalCost { get; set; }
         public int AvailableQuantity { get; set; }
         public string EquipmentStatus { get; set; }
-        private bool inInventory;
         private bool isSold;
 
         public Equipment(int _equipmentID, int _categoryID, string _name, string _description, double _dailyRentalCost, int _availableQuantity, string _equipmentStatus)
@@ -28,14 +27,18 @@ namespace VillageRental.Components.Data
             AvailableQuantity = _availableQuantity;
             EquipmentStatus = _equipmentStatus;
 
-            inInventory = true;
             isSold = false;
         }
 
-        public void SetInInventory(bool _inInventory)
+        public void UpdateEquipment(Equipment _equipment)
         {
-            inInventory = _inInventory;
-        }
+			CategoryID = _equipment.CategoryID;
+			Name = _equipment.Name;
+			Description = _equipment.Description;
+			DailyRentalCost = _equipment.DailyRentalCost;
+			AvailableQuantity = _equipment.AvailableQuantity;
+			EquipmentStatus = _equipment.EquipmentStatus;
+		}
 
         public void SetIsSold(bool _isSold)
         {

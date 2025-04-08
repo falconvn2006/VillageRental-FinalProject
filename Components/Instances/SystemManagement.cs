@@ -13,14 +13,14 @@ namespace VillageRental.Components.Instances
         public static string RentalInformationContent = "101;10;Hammer drill;Powerful drill for concrete and masonry;25,99;\r\n201;20;Chainsaw;Gas-powered chainsaw for cutting wood;49,99;\r\n202;20;Lawn mower;Self-propelled lawn mower with mulching function;19,99;\r\n301;30;Small Compressor;5 Gallon Compressor-Portable;14,99;\r\n501;50;Brad Nailer;Brad Nailer. Requires 3/4 to 1 1/2 Brad Nails;10,99;";
 	}
 
-	public class SystemManagement
+    public class SystemManagement
     {
         public bool loadExampleData = true, overwriteExampleDataOnStart = true;
 
         public List<Customer> customerList;
-		public List<Equipment> equipmentList;
-		public List<CategoryItem> categoryList;
-		public List<RentalInformation> rentalInformationList;
+        public List<Equipment> equipmentList;
+        public List<CategoryItem> categoryList;
+        public List<RentalInformation> rentalInformationList;
 
         public SystemManagement()
         {
@@ -29,36 +29,36 @@ namespace VillageRental.Components.Instances
             categoryList = new List<CategoryItem>();
             rentalInformationList = new List<RentalInformation>();
 
-            if(loadExampleData)
+            if (loadExampleData)
             {
-				string fileCategoryPath = FileSystem.Current.AppDataDirectory + "\\category.txt";
+                string fileCategoryPath = FileSystem.Current.AppDataDirectory + "\\category.txt";
                 string fileRentalInformationPath = FileSystem.Current.AppDataDirectory + "\\rental_information.txt";
-				if (overwriteExampleDataOnStart)
+                if (overwriteExampleDataOnStart)
                 {
                     using (StreamWriter stream = File.CreateText(fileCategoryPath))
                     {
                         stream.Write(ExampleData.CategoryContent);
                     }
 
-					using (StreamWriter stream = File.CreateText(fileRentalInformationPath))
-					{
-						stream.Write(ExampleData.RentalInformationContent);
-					}
-				}
-
-                using(StreamReader stream = File.OpenText(fileCategoryPath))
-                {
-                    while(!stream.EndOfStream)
+                    using (StreamWriter stream = File.CreateText(fileRentalInformationPath))
                     {
-						string[] content = stream.ReadLine().Trim().Split(';');
+                        stream.Write(ExampleData.RentalInformationContent);
+                    }
+                }
+
+                using (StreamReader stream = File.OpenText(fileCategoryPath))
+                {
+                    while (!stream.EndOfStream)
+                    {
+                        string[] content = stream.ReadLine().Trim().Split(';');
                         int categoryId = Convert.ToInt32(content[0]);
                         string categoryDescription = content[1];
 
                         CategoryItem categoryItem = new CategoryItem(categoryId, categoryDescription);
                         AddNewCategory(categoryItem);
-					}
+                    }
                 }
-			}
+            }
         }
 
         #region Customer Management Functions
@@ -79,7 +79,7 @@ namespace VillageRental.Components.Instances
 
         public Customer FindCustomer(int _customerId)
         {
-            foreach(Customer customer in customerList)
+            foreach (Customer customer in customerList)
             {
                 if (customer.CustomerID == _customerId)
                 {
@@ -94,48 +94,48 @@ namespace VillageRental.Components.Instances
         {
             List<Customer> customerResultList = new List<Customer>();
 
-			foreach (Customer customer in customerList)
-			{
-				if (customer.CustomerID == _customerId)
-				{
-					customerResultList.Add(customer);
-				}
-			}
+            foreach (Customer customer in customerList)
+            {
+                if (customer.CustomerID == _customerId)
+                {
+                    customerResultList.Add(customer);
+                }
+            }
 
-			return customerResultList;
-		}
+            return customerResultList;
+        }
 
-		public List<Customer> FindCustomerMultipleResultByLastName(string _lastName)
-		{
-			List<Customer> customerResultList = new List<Customer>();
+        public List<Customer> FindCustomerMultipleResultByLastName(string _lastName)
+        {
+            List<Customer> customerResultList = new List<Customer>();
 
-			foreach (Customer customer in customerList)
-			{
-				if (customer.LastName == _lastName)
-				{
-					customerResultList.Add(customer);
-				}
-			}
+            foreach (Customer customer in customerList)
+            {
+                if (customer.LastName == _lastName)
+                {
+                    customerResultList.Add(customer);
+                }
+            }
 
-			return customerResultList;
-		}
+            return customerResultList;
+        }
 
-		public List<Customer> FindCustomerMultipleResultByEmail(string _email)
-		{
-			List<Customer> customerResultList = new List<Customer>();
+        public List<Customer> FindCustomerMultipleResultByEmail(string _email)
+        {
+            List<Customer> customerResultList = new List<Customer>();
 
-			foreach (Customer customer in customerList)
-			{
-				if (customer.Email == _email)
-				{
-					customerResultList.Add(customer);
-				}
-			}
+            foreach (Customer customer in customerList)
+            {
+                if (customer.Email == _email)
+                {
+                    customerResultList.Add(customer);
+                }
+            }
 
-			return customerResultList;
-		}
+            return customerResultList;
+        }
 
-		public void RemoveCustomer(int _customerId)
+        public void RemoveCustomer(int _customerId)
         {
             Customer foundCustomer = FindCustomer(_customerId);
             if (foundCustomer != null)
@@ -164,7 +164,7 @@ namespace VillageRental.Components.Instances
         {
             Equipment equipmentFound = FindEquipment(_equipmentID);
             if (equipmentFound != null)
-                equipmentFound.SetInInventory(false);
+                equipmentList.Remove(equipmentFound);
         }
 
         public void SellEquipment(int _equipmentID, double _priceToSell)
@@ -174,15 +174,61 @@ namespace VillageRental.Components.Instances
                 equipmentFound.SetIsSold(true);
         }
 
+        public void UpdateEquipment(int _equipmentID, Equipment _newEquipmentData)
+        {
+            Equipment equipmentToUpdate = FindEquipment(_equipmentID);
+
+            if(equipmentToUpdate != null)
+            {
+                equipmentToUpdate.UpdateEquipment(_newEquipmentData);
+            }
+        }
+
         public Equipment FindEquipment(int _equipmentID)
         {
-            foreach(Equipment equipment in equipmentList)
+            foreach (Equipment equipment in equipmentList)
             {
-                if(equipment.EquipmentID == _equipmentID)
+                if (equipment.EquipmentID == _equipmentID)
                     return equipment;
             }
 
             return null;
+        }
+
+        public List<Equipment> FindEquipmentMultipleResult(int _equipmentID)
+        {
+            List<Equipment> result = new List<Equipment>();
+            foreach(Equipment equipment in equipmentList)
+            {
+                if(equipment.EquipmentID == _equipmentID)
+                    result.Add(equipment);
+            }
+
+            return result;
+        }
+
+        public List<Equipment> FindEquipmentMultipleResultByCategoryID(int _categoryID)
+        {
+            List<Equipment> result = new List<Equipment> ();
+            foreach(Equipment equipment in equipmentList)
+            {
+                if(equipment.CategoryID == _categoryID)
+                    result.Add(equipment);
+            }
+
+            return result;
+        }
+
+        public List<Equipment> FindEquipmentMultipleResultByName(string _name)
+        {
+            List<Equipment> result = new List<Equipment>();
+            foreach(Equipment equipment in equipmentList)
+            {
+                if(equipment.Name == _name)
+                    result.Add(equipment);
+            }
+
+            return result;
         }
 
         #endregion

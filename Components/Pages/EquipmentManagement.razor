@@ -1,4 +1,8 @@
 ﻿@page "/equipmentmanagement"
+@using VillageRental.Components.Data
+@using VillageRental.Components.Instances
+@inject SystemManagement sysManagement
+
 <h3 class="text-center">Equipment Management</h3>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
@@ -7,7 +11,7 @@
 		<div>
 			<p class="d-inline">Search by</p>
 			<select class="form-select d-inline" @bind="searchFilter">
-				<option value="CustomerID">Equipment ID</option>
+				<option selected value="EquipmentID">Equipment ID</option>
 				<option value="CategoryID">Category ID</option>
 				<option value="Name">Name</option>
 			</select>
@@ -15,13 +19,18 @@
 		<hr />
 		<div class="text-center">
 			<div class="input-group mb-3">
-				<input type="text" class="form-control" placeholder="Enter you parameter" />
-				<button class="btn btn-primary" type="button">Search</button>
+				<input type="text" class="form-control" placeholder="Enter your value" @bind="searchEquipmentFieldValue" />
+				<button class="btn btn-primary" type="button" @onclick="FindEquipment">Search</button>
 			</div>
-			<div class="bg-white ">
+			<div class="bg-white overflow-auto rounded-3">
 				<!--Insert a foreach to display each button/link here -->
+				@foreach(Equipment equipment in equipmentSearchResultList)
+				{
+					<p @onclick="() => SetCurrentEquipment(equipment)">Equipment ID: @equipment.EquipmentID | Equipment Name: @equipment.Name</p>
+				}
+				<p>@searchResult</p>
 			</div>
-			<button class="btn btn-primary">
+			<button class="btn btn-primary mt-3">
 				Clear Result
 			</button>
 		</div>
@@ -33,57 +42,73 @@
 			<div class="mb-3 row">
 				<label for="equipmentID" class="col-sm-3 col-form-label">Equipment ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="equipmentID" />
+					<input type="text" class="form-control" id="equipmentID" @bind="equipmentID" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="categoryID" class="col-sm-3 col-form-label">Category ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="categoryID" />
+					<input type="text" class="form-control" id="categoryID" value="@categoryID" @onchange="(ChangeEventArgs __e) => {
+							categoryID = __e.Value.ToString();
+							if(!string.IsNullOrEmpty(categoryID)) 
+							{ 
+								CategoryItem getCategory = sysManagement.FindCategory(Convert.ToInt32(categoryID));								
+
+								if(getCategory != null)
+									equipmentCategoryText = getCategory.Description;
+								else
+									equipmentCategoryText = notFoundCategoryMessage;
+							}
+							else
+							{
+								equipmentCategoryText = string.Empty;
+							}
+						}" 
+					/>
 				</div>
 			</div>
-			<p>Category Description: </p>
+			<p>Category Description: @equipmentCategoryText</p>
 			<div class="mb-3 row">
 				<label for="name" class="col-sm-3 col-form-label">Name</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="name" />
+					<input type="text" class="form-control" id="name" @bind="name" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="description" class="col-sm-3 col-form-label">Description</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="description" />
+					<input type="text" class="form-control" id="description" @bind="description" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="dailyRentalCost" class="col-sm-3 col-form-label">Daily Rental Cost</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="dailyRentalCost" />
+					<input type="text" class="form-control" id="dailyRentalCost" @bind="dailyRentalCost" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="quantity" class="col-sm-3 col-form-label">Quantity</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="quantity" />
+					<input type="number" class="form-control" id="quantity" @bind="quantity" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="equipmentStatus" class="col-sm-3 col-form-label">equipmentStatus</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="equipmentStatus" />
+					<input type="text" class="form-control" id="equipmentStatus" @bind="equipmentStatus" />
 				</div>
 			</div>
 			<div class="container gap-4 text-center">
 				<div class="row">
 					<div class="col">
-						<button class="btn btn-primary">Save</button>
-						<button class="btn btn-primary">Clear</button>
+						<button class="btn btn-primary" @onclick="CreateEquipment">Save</button>
+						<button class="btn btn-primary" @onclick="ClearSearchResult">Clear</button>
 					</div>
 				</div>
 				<div class="row mt-2">
 					<div class="col">
 						<button class="btn btn-primary">Sell Equipment</button>
-						<button class="btn btn-primary">Remove from Inventory</button>
+						<button class="btn btn-primary" @onclick="RemoveFromInventory">Remove from Inventory</button>
 					</div>
 				</div>
 			</div>
@@ -93,5 +118,122 @@
 
 
 @code {
-	private string searchFilter = "CustomerID";
+	private string searchFilter = "EquipmentID";
+	private string searchEquipmentFieldValue = "";
+
+	private string searchResult = "";
+
+	private Equipment? currentEquipment;
+	private List<Equipment> equipmentSearchResultList = new List<Equipment>();
+
+	private string equipmentCategoryText = "";
+	private string notFoundCategoryMessage = "Category Not Found in Category List";
+
+	private string equipmentID, categoryID, name, description, dailyRentalCost, quantity, equipmentStatus;
+
+	private void ClearSearchResult()
+	{
+		equipmentSearchResultList = new List<Equipment>();
+		currentEquipment = null;
+	}
+
+	private void SetCurrentEquipment(Equipment _currentEquipment)
+	{
+		currentEquipment = _currentEquipment;
+
+		equipmentID = currentEquipment.EquipmentID.ToString();
+		categoryID = currentEquipment.CategoryID.ToString();
+		name = currentEquipment.Name;
+		description = currentEquipment.Description.ToString();
+		dailyRentalCost = currentEquipment.DailyRentalCost.ToString();
+		quantity = currentEquipment.AvailableQuantity.ToString();
+		equipmentStatus = currentEquipment.EquipmentStatus.ToString();
+	}
+
+	private void FindEquipment()
+	{
+		if (string.IsNullOrEmpty(searchEquipmentFieldValue))
+			return;
+
+		switch(searchFilter)
+		{
+			case "EquipmentID":
+				equipmentSearchResultList = sysManagement.FindEquipmentMultipleResult(Convert.ToInt32(searchEquipmentFieldValue));
+				break;
+			case "CategoryID":
+				equipmentSearchResultList = sysManagement.FindEquipmentMultipleResultByCategoryID(Convert.ToInt32(searchEquipmentFieldValue));
+				break;
+			case "Name":
+				equipmentSearchResultList = sysManagement.FindEquipmentMultipleResultByName(searchEquipmentFieldValue);
+				break;
+			default:
+				break;
+		}
+
+		if(equipmentSearchResultList.Count == 0)
+		{
+			searchResult = "Not Found!";
+		}
+		else
+		{
+			searchResult = "";
+		}
+	}
+
+	private void CreateEquipment()
+	{
+		if (string.IsNullOrEmpty(equipmentID) || string.IsNullOrEmpty(categoryID) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(dailyRentalCost) || string.IsNullOrEmpty(quantity) || string.IsNullOrEmpty(equipmentStatus))
+			return;
+
+		if(currentEquipment == null)
+		{
+			Equipment newEquipment = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
+			sysManagement.AddEquipmentToList(newEquipment);
+
+			Application.Current.MainPage.DisplayAlert("Debug", "Equipment Created!", "OK");
+
+			equipmentID = string.Empty;
+			categoryID = string.Empty;
+			name = string.Empty;
+			description = string.Empty;
+			dailyRentalCost = string.Empty;
+			quantity = string.Empty;
+			equipmentStatus = string.Empty;
+			currentEquipment = null;
+		}
+		else
+		{
+			Equipment newEquipmentData = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
+			sysManagement.UpdateEquipment(currentEquipment.EquipmentID, newEquipmentData);
+
+			Application.Current.MainPage.DisplayAlert("Debug", "Equipment Updated!", "OK");
+		}
+	}
+
+	private void ClearEquipmentInfo()
+	{
+		equipmentID = string.Empty;
+		categoryID = string.Empty;
+		name = string.Empty;
+		description = string.Empty;
+		dailyRentalCost = string.Empty;
+		quantity = string.Empty;
+		equipmentStatus = string.Empty;
+		currentEquipment = null;
+	}
+
+	private void RemoveFromInventory()
+	{
+		equipmentID = string.Empty;
+		categoryID = string.Empty;
+		name = string.Empty;
+		description = string.Empty;
+		dailyRentalCost = string.Empty;
+		quantity = string.Empty;
+		equipmentStatus = string.Empty;
+
+		sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
+
+		currentEquipment = null;
+	}
 }
