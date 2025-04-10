@@ -14,7 +14,7 @@ namespace VillageRental.Components.Data
         public string CustomerLastName { get; set; }
         public List<RentalItem> rentalItemList;
         public string RentalStatus { get; set; }
-        public double TotalCostToRent { get; set; }
+        public double TotalCostToRent { get; set; } = 0;
 
         public RentalInformation(int _rentalID, DateTime _currentDate, int _customerID, string _customerLastName, string _rentalStatus)
         {
@@ -22,12 +22,19 @@ namespace VillageRental.Components.Data
             CurrentDate = _currentDate;
             CustomerID = _customerID;
             CustomerLastName = _customerLastName;
+            RentalStatus = _rentalStatus;
             rentalItemList = new List<RentalItem>();
         }
 
         public void AddRentalItem(RentalItem _item)
         {
             rentalItemList.Add(_item);
+            TotalCostToRent += _item.CostOfRental;
+        }
+
+        public void RemoveRentalItem(RentalItem _item)
+        {
+            rentalItemList.Remove(_item);
         }
     }
 }

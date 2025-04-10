@@ -1,0 +1,127 @@
+﻿@page "/categorymanagement"
+@using VillageRental.Components.Instances
+@using VillageRental.Components.Data
+@inject SystemManagement sysManagement
+<h1 class="text-center">Category Management</h1>
+
+<div class="d-flex flex-row gap-4 justify-content-between ">
+	<div class="bg-secondary p-4 rounded-2">
+		<h3 class="text-center">Category List</h3>
+		<div class="text-center">
+			<div class="bg-white rounded-3 overflow-auto">
+				<!--Insert a foreach to display each button/link here -->
+				@if(sysManagement.categoryList.Count > 0)
+				{
+					foreach (CategoryItem item in sysManagement.categoryList)
+					{
+						<p class="m-3" @onclick="() => SetCurrentCategory(item)">CategoryID: @item.CategoryID, Description: @item.Description</p>
+					}
+				}
+				else
+				{
+					<p>No catgory</p>				
+				}
+			</div>
+		</div>
+	</div>
+
+	<div class="bg-secondary p-3 rounded-2 flex-fill">
+		<h3 class="text-center">Customer Information</h3>
+		<div>
+			<div class="mb-3 row">
+				<label for="categoryID" class="col-sm-3 col-form-label">Category ID</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control" id="categoryID" @bind="categoryID" />
+				</div>
+			</div>
+			<div class="mb-3 row">
+				<label for="description" class="col-sm-3 col-form-label">Category Description</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control" id="description" @bind="description" />
+				</div>
+			</div>
+			</div>
+		<div>
+			<div class="container gap-4 text-center">
+				<div class="row">
+					<div class="col">
+						<button class="btn btn-primary" @onclick="CreateCategory">Save</button>
+					</div>
+				</div>
+				<div class="row mt-2">
+					<div class="col">
+						<button class="btn btn-primary" @onclick="ClearCategoryInformation">Clear</button>
+						<button class="btn btn-primary" @onclick="DeleteCategoryRecord">Delete Record</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+@code {
+	private string searchFilter = "CustomerID";
+	private string searchFieldValue = string.Empty;
+
+	private CategoryItem? currentCategory;
+
+	private string categoryID, description;
+
+	private void SetCurrentCategory(CategoryItem _item)
+	{
+		currentCategory = _item;
+		categoryID = _item.CategoryID.ToString();
+		description = _item.Description;
+	}
+
+	private void ClearCategoryInformation()
+	{
+		currentCategory = null;
+		categoryID = description = string.Empty;
+	}
+
+	private void CreateCategory()
+	{
+		if (string.IsNullOrEmpty(categoryID) || string.IsNullOrEmpty(description))
+		{
+			currentCategory = null;		
+			return;
+		}
+
+		if (currentCategory == null)
+		{
+			CategoryItem newCategoryItem = new CategoryItem(Convert.ToInt32(categoryID), description);
+			sysManagement.AddNewCategory(newCategoryItem);
+
+			Application.Current.MainPage.DisplayAlert("Debug", "Category Created!", "OK");
+
+			categoryID = string.Empty;
+			description = string.Empty;
+			currentCategory = null;
+		}
+		else
+		{
+			CategoryItem newCategoryItemData = new CategoryItem(Convert.ToInt32(categoryID), description);
+			sysManagement.UpdateCategory(currentCategory.CategoryID, newCategoryItemData);
+
+			Application.Current.MainPage.DisplayAlert("Debug", "Category Updated!", "OK");
+		}
+
+		sysManagement.WriteCategoryData();
+	}
+
+	private void DeleteCategoryRecord()
+	{
+		if (currentCategory == null)
+			return;
+
+		sysManagement.RemoveCategory(currentCategory.CategoryID);
+		categoryID = string.Empty;
+		description = string.Empty;
+
+		Application.Current.MainPage.DisplayAlert("Debug", "Category Record Deleted!", "OK");
+
+		sysManagement.WriteCategoryData();
+	}
+}

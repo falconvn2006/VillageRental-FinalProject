@@ -32,6 +32,7 @@ namespace VillageRental.Components.Data
 
         public void UpdateEquipment(Equipment _equipment)
         {
+            EquipmentID = _equipment.EquipmentID;
 			CategoryID = _equipment.CategoryID;
 			Name = _equipment.Name;
 			Description = _equipment.Description;
@@ -44,5 +45,10 @@ namespace VillageRental.Components.Data
         {
             isSold = _isSold;
         }
-    }
+
+		public override string ToString()
+		{
+			return $"{EquipmentID};{CategoryID};{Name};{Description};{DailyRentalCost};{AvailableQuantity};{EquipmentStatus}";
+		}
+	}
 }

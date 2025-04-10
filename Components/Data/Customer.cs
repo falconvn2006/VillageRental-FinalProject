@@ -25,8 +25,9 @@ namespace VillageRental.Components.Data
             isBanned = _isBanned;
         }
 
-        public void UpdateCustomer(string _newLastName, string _newFirstName, string _newPhoneNumber, string _newEmail)
+        public void UpdateCustomer(int _newCustomerID,string _newLastName, string _newFirstName, string _newPhoneNumber, string _newEmail)
         {
+            CustomerID = _newCustomerID;
             LastName = _newLastName;
             FirstName = _newFirstName;
             PhoneNumber = _newPhoneNumber;
@@ -37,5 +38,10 @@ namespace VillageRental.Components.Data
         {
             isBanned = banned;
         }
-    }
+
+		public override string ToString()
+		{
+			return $"{CustomerID};{LastName};{FirstName};{PhoneNumber};{Email};{isBanned}";
+		}
+	}
 }

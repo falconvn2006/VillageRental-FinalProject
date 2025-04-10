@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,14 +11,23 @@ namespace VillageRental.Components.Instances
     public static class ExampleData
     {
 		public static string CategoryContent = "10;Power tools\r\n20;Yard equipment\r\n30;Compressors\r\n40;Generators\r\n50;Air Tools";
-        public static string RentalInformationContent = "1000;15/02/2024;1001;201;20/02/2024;23/02/2024;149,97\r\n1001;16/02/2024;1002;501;21/02/2024;25/02/2024;43,96";
+        public static string RentalInformationContent = "1000;15/02/2024;1001;201;20/02/2024;23/02/2024;149,97;1;Renting\r\n1001;16/02/2024;1002;501;21/02/2024;25/02/2024;43,96;1;Renting";
         public static string CustomerContent = "1001;Doe;John;(555) 555-1212;jd@sample.net;False\r\n1002;Smith;Jane;(555) 555-3434;js@live.com;False\r\n1003;Lee;Michael;(555) 555-5656;ml@sample.net;False";
         public static string EquipmentContent = "101;10;Hammer drill;Powerful drill for concrete and masonry;25,99;1;Good\r\n201;20;Chainsaw;Gas-powered chainsaw for cutting wood;49,99;1;Good\r\n202;20;Lawn mower;Self-propelled lawn mower with mulching function;19,99;1;Good\r\n301;30;Small Compressor;5 Gallon Compressor-Portable;14,99;1;Good\r\n501;50;Brad Nailer;Brad Nailer. Requires 3/4 to 1 1/2 Brad Nails;10,99;1;Good";
+    }
+
+    public static class DataFilePath
+    {
+		public static string fileCategoryPath = FileSystem.Current.AppDataDirectory + "\\category.txt";
+		public static string fileRentalInformationPath = FileSystem.Current.AppDataDirectory + "\\rental_information.txt";
+		public static string fileCustomerPath = FileSystem.Current.AppDataDirectory + "\\customer.txt";
+		public static string fileEquipmentPath = FileSystem.Current.AppDataDirectory + "\\equipment.txt";
 	}
+
 
     public class SystemManagement
     {
-        public bool loadExampleData = true, overwriteExampleDataOnStart = true;
+        public bool writeExampleDataIfNotExits = true;
 
         public List<Customer> customerList;
         public List<Equipment> equipmentList;
@@ -31,87 +41,20 @@ namespace VillageRental.Components.Instances
             categoryList = new List<CategoryItem>();
             rentalInformationList = new List<RentalInformation>();
 
-            if (loadExampleData)
-            {
-                string fileCategoryPath = FileSystem.Current.AppDataDirectory + "\\category.txt";
-                string fileRentalInformationPath = FileSystem.Current.AppDataDirectory + "\\rental_information.txt";
-                string fileCustomerPath = FileSystem.Current.AppDataDirectory + "\\customer.txt";
-                string fileEquipmentPath = FileSystem.Current.AppDataDirectory + "\\equipment.txt";
+            if(writeExampleDataIfNotExits)
+                WriteExampleData(false);
 
-                if (overwriteExampleDataOnStart)
-                {
-                    using (StreamWriter stream = File.CreateText(fileCategoryPath))
-                    {
-                        stream.Write(ExampleData.CategoryContent);
-                    }
+			LoadCategory(DataFilePath.fileCategoryPath);
 
-                    using (StreamWriter stream = File.CreateText(fileCustomerPath))
-                    {
-                        stream.Write(ExampleData.CustomerContent);
-                    }
+            LoadCustomer(DataFilePath.fileCustomerPath);
 
-                    using (StreamWriter stream = File.CreateText(fileEquipmentPath))
-                    {
-                        stream.Write(ExampleData.EquipmentContent);
-                    }
+            LoadEquipment(DataFilePath.fileEquipmentPath);
 
-					using (StreamWriter stream = File.CreateText(fileRentalInformationPath))
-					{
-						stream.Write(ExampleData.RentalInformationContent);
-					}
-				}
+            LoadRentalInformation(DataFilePath.fileRentalInformationPath);
 
-                using (StreamReader stream = File.OpenText(fileCategoryPath))
-                {
-                    while (!stream.EndOfStream)
-                    {
-                        string[] content = stream.ReadLine().Trim().Split(';');
-                        int categoryId = Convert.ToInt32(content[0]);
-                        string categoryDescription = content[1];
-
-                        CategoryItem categoryItem = new CategoryItem(categoryId, categoryDescription);
-                        AddNewCategory(categoryItem);
-                    }
-                }
-
-                using (StreamReader stream = File.OpenText(fileCustomerPath))
-                {
-                    while (!stream.EndOfStream)
-                    {
-                        string[] content = stream.ReadLine().Trim().Split(';');
-                        int customerId = Convert.ToInt32(content[0]);
-                        string lastName = content[1];
-                        string firstName = content[2];
-                        string phoneNumber = content[3];
-                        string email = content[4];
-                        bool isBanned = Convert.ToBoolean(content[5]);
-
-                        Customer customerData = new Customer(customerId, lastName, firstName, phoneNumber, email, isBanned);
-                        AddCustomerToList(customerData);
-                    }
-                }
-
-                using (StreamReader stream = File.OpenText(fileEquipmentPath))
-                {
-                    while (!stream.EndOfStream)
-                    {
-                        string[] content = stream.ReadLine().Trim().Split(';');
-                        int equipmentId = Convert.ToInt32(content[0]);
-                        int categoryId = Convert.ToInt32(content[1]);
-                        string name = content[2];
-                        string description = content[3];
-                        double dailyRentalCost = Convert.ToDouble(content[4]);
-                        int quantity = Convert.ToInt32(content[5]);
-                        string status = content[6];
-
-                        Equipment newEquipment = new Equipment(equipmentId, categoryId, name, description, dailyRentalCost, quantity, status);
-                        AddEquipmentToList(newEquipment);
-                    }
-                }
-
-                LoadRentalInformation(fileRentalInformationPath);
-            }
+            Debug.WriteLine("Application Started");
         }
+
 
         #region Customer Management Functions
         public void AddCustomerToList(Customer _customer)
@@ -125,7 +68,7 @@ namespace VillageRental.Components.Instances
 
             if (customerFound != null)
             {
-                customerFound.UpdateCustomer(_newCustomerData.LastName, _newCustomerData.FirstName, _newCustomerData.PhoneNumber, _newCustomerData.Email);
+                customerFound.UpdateCustomer(_newCustomerData.CustomerID, _newCustomerData.LastName, _newCustomerData.FirstName, _newCustomerData.PhoneNumber, _newCustomerData.Email);
             }
         }
 
@@ -299,6 +242,13 @@ namespace VillageRental.Components.Instances
                 categoryList.Remove(categoryFound);
         }
 
+        public void UpdateCategory(int _categoryID, CategoryItem _newCategoryData)
+        {
+            CategoryItem categoryToChange = FindCategory(_categoryID);
+            categoryToChange.CategoryID = _newCategoryData.CategoryID;
+            categoryToChange.Description = _newCategoryData.Description;
+        }
+
         public CategoryItem FindCategory(int _categoryID)
         {
             foreach(CategoryItem categoryItem in categoryList)
@@ -329,44 +279,190 @@ namespace VillageRental.Components.Instances
             return null;
         }
 
-        private void LoadRentalInformation(string _filePath)
+        private void WriteExampleData(bool overwriteOnStart)
         {
-            using (StreamReader stream = File.OpenText(_filePath))
-            {
-                while (!stream.EndOfStream)
-                {
-                    string[] content = stream.ReadLine().Trim().Split(';');
-                    int rentalId = Convert.ToInt32(content[0]);
-                    DateTime currentDate = Convert.ToDateTime(content[1]);
-                    int customerId = Convert.ToInt32(content[2]);
-                    int equipmentId = Convert.ToInt32(content[3]);
-                    DateTime rentalDate = Convert.ToDateTime(content[4]);
-                    DateTime returnDate = Convert.ToDateTime(content[5]);
-                    double totalCost = Convert.ToDouble(content[6]);
+            if(!File.Exists(DataFilePath.fileCategoryPath) || overwriteOnStart)
+		        using (StreamWriter stream = File.CreateText(DataFilePath.fileCategoryPath))
+                    stream.Write(ExampleData.CategoryContent);
 
-                    RentalInformation rentalInformation = FindRentalInformation(rentalId);
+            if(!File.Exists(DataFilePath.fileCustomerPath) || overwriteOnStart)
+			    using (StreamWriter stream = File.CreateText(DataFilePath.fileCustomerPath))
+				    stream.Write(ExampleData.CustomerContent);
 
-                    if(rentalInformation == null)
-                    {
+            if(!File.Exists(DataFilePath.fileEquipmentPath) || overwriteOnStart)
+		        using (StreamWriter stream = File.CreateText(DataFilePath.fileEquipmentPath))
+			        stream.Write(ExampleData.EquipmentContent);
+
+            if(!File.Exists(DataFilePath.fileRentalInformationPath) || overwriteOnStart)
+				using (StreamWriter stream = File.CreateText(DataFilePath.fileRentalInformationPath))
+					stream.Write(ExampleData.RentalInformationContent);
+		}
+
+		#region Load Data
+
+		private void LoadCategory(string _filePath)
+		{
+			using (StreamReader stream = File.OpenText(_filePath))
+			{
+				while (!stream.EndOfStream)
+				{
+					string[] content = stream.ReadLine().Trim().Split(';');
+					int categoryId = Convert.ToInt32(content[0]);
+					string categoryDescription = content[1];
+
+					CategoryItem categoryItem = new CategoryItem(categoryId, categoryDescription);
+					AddNewCategory(categoryItem);
+				}
+			}
+		}
+
+		private void LoadCustomer(string _filePath)
+		{
+			using (StreamReader stream = File.OpenText(_filePath))
+			{
+				while (!stream.EndOfStream)
+				{
+					string[] content = stream.ReadLine().Trim().Split(';');
+					int customerId = Convert.ToInt32(content[0]);
+					string lastName = content[1];
+					string firstName = content[2];
+					string phoneNumber = content[3];
+					string email = content[4];
+					bool isBanned = Convert.ToBoolean(content[5]);
+
+					Customer customerData = new Customer(customerId, lastName, firstName, phoneNumber, email, isBanned);
+					AddCustomerToList(customerData);
+				}
+			}
+		}
+
+		private void LoadEquipment(string _filePath)
+		{
+			using (StreamReader stream = File.OpenText(_filePath))
+			{
+				while (!stream.EndOfStream)
+				{
+					string[] content = stream.ReadLine().Trim().Split(';');
+					int equipmentId = Convert.ToInt32(content[0]);
+					int categoryId = Convert.ToInt32(content[1]);
+					string name = content[2];
+					string description = content[3];
+					double dailyRentalCost = Convert.ToDouble(content[4]);
+					int quantity = Convert.ToInt32(content[5]);
+					string status = content[6];
+
+					Equipment newEquipment = new Equipment(equipmentId, categoryId, name, description, dailyRentalCost, quantity, status);
+					AddEquipmentToList(newEquipment);
+				}
+			}
+		}
+
+		private void LoadRentalInformation(string _filePath)
+		{
+			using (StreamReader stream = File.OpenText(_filePath))
+			{
+				while (!stream.EndOfStream)
+                { 
+					string[] content = stream.ReadLine().Trim().Split(';');
+					int rentalId = Convert.ToInt32(content[0]);
+					DateTime currentDate = Convert.ToDateTime(content[1]);
+					int customerId = Convert.ToInt32(content[2]);
+					int equipmentId = Convert.ToInt32(content[3]);
+					DateTime rentalDate = Convert.ToDateTime(content[4]);
+					DateTime returnDate = Convert.ToDateTime(content[5]);
+					double totalCost = Convert.ToDouble(content[6]);
+					int quantity = Convert.ToInt32(content[7]);
+					string rentalStatus = content[8];
+
+					RentalInformation rentalInformation = FindRentalInformation(rentalId);
+
+					if (rentalInformation == null)
+					{
 						string customerLastName = FindCustomer(customerId).LastName;
-						rentalInformation = new RentalInformation(rentalId, currentDate, customerId, customerLastName, "Renting");
+						rentalInformation = new RentalInformation(rentalId, currentDate, customerId, customerLastName, rentalStatus);
 
-                        double rentalCost = ((double)(returnDate - rentalDate).Days * FindEquipment(equipmentId).DailyRentalCost);
-                        RentalItem newRentalItem = new RentalItem(equipmentId, rentalDate, returnDate, rentalCost, 1);
-
-                        rentalInformation.AddRentalItem(newRentalItem);
-					}
-                    else
-                    {
 						double rentalCost = ((double)(returnDate - rentalDate).Days * FindEquipment(equipmentId).DailyRentalCost);
-						RentalItem newRentalItem = new RentalItem(equipmentId, rentalDate, returnDate, rentalCost, 1);
+						RentalItem newRentalItem = new RentalItem(equipmentId, rentalDate, returnDate, rentalCost, quantity);
 
-                        rentalInformation.AddRentalItem(newRentalItem);
+						rentalInformation.AddRentalItem(newRentalItem);
+					}
+					else
+					{
+						double rentalCost = ((double)(returnDate - rentalDate).Days * FindEquipment(equipmentId).DailyRentalCost);
+						RentalItem newRentalItem = new RentalItem(equipmentId, rentalDate, returnDate, rentalCost, quantity);
+
+						rentalInformation.AddRentalItem(newRentalItem);
 					}
 
-                    rentalInformationList.Add(rentalInformation);
+					rentalInformationList.Add(rentalInformation);
+				}
+
+                rentalInformationList = rentalInformationList.Distinct().ToList();
+            }
+		}
+
+		#endregion
+
+		#region Save Data
+
+		public void WriteCategoryData()
+        {
+            using(StreamWriter stream = File.CreateText(DataFilePath.fileCategoryPath))
+            {
+                foreach(CategoryItem item in categoryList)
+                {
+                    string content = item.ToString();
+                    stream.WriteLine(content);
                 }
             }
         }
-    }
+
+		public void WriteCustomerData()
+		{
+			using (StreamWriter stream = File.CreateText(DataFilePath.fileCustomerPath))
+			{
+				foreach (Customer customer in customerList)
+				{
+					string content = customer.ToString();
+					stream.WriteLine(content);
+				}
+			}
+		}
+
+        public void WriteEquipmentData()
+        {
+            using (StreamWriter stream = File.CreateText(DataFilePath.fileEquipmentPath))
+            {
+                foreach(Equipment equipment in equipmentList)
+                {
+                    string content = equipment.ToString();
+                    stream.WriteLine(content);
+                }
+            }
+        }
+
+        public void WriteRentalInformationData()
+        {
+            using(StreamWriter stream = File.CreateText(DataFilePath.fileRentalInformationPath))
+            {
+                foreach(RentalInformation information in rentalInformationList)
+                {
+                    string currentDate = $"{information.CurrentDate.Day}/{information.CurrentDate.Month}/{information.CurrentDate.Year}";
+                    string content = $"{information.RentalID};{currentDate};{information.CustomerID};";
+                    foreach(RentalItem item in information.rentalItemList)
+                    {
+                        string copyContent = content.Clone().ToString();
+                        string rentalDate = $"{item.RentalDate.Day}/{item.RentalDate.Month}/{item.RentalDate.Year}";
+                        string returnDate = $"{item.ReturnDate.Day}/{item.ReturnDate.Month}/{item.ReturnDate.Year}";
+                        copyContent += $"{item.EquipmentID};{rentalDate};{returnDate};{item.CostOfRental};";
+                        copyContent += $"{item.Quantity};{information.RentalStatus}";
+
+                        stream.WriteLine(copyContent);
+                    }
+                }
+            }
+        }
+
+		#endregion
+	}
 }

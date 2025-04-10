@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Maui.LifecycleEvents;
 using VillageRental.Components.Instances;
 
 namespace VillageRental
@@ -17,7 +18,6 @@ namespace VillageRental
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddSingleton<SystemManagement>();
-
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();

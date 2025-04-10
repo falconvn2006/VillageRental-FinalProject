@@ -3,7 +3,7 @@
 @using VillageRental.Components.Instances
 @inject SystemManagement sysManagement
 
-<h3 class="text-center">Equipment Management</h3>
+<h2 class="text-center">Equipment Management</h2>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
 	<div class="bg-secondary p-4 rounded-2">
@@ -190,7 +190,10 @@
 	private void CreateEquipment()
 	{
 		if (string.IsNullOrEmpty(equipmentID) || string.IsNullOrEmpty(categoryID) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(dailyRentalCost) || string.IsNullOrEmpty(quantity) || string.IsNullOrEmpty(equipmentStatus))
+		{
+			currentEquipment = null;		
 			return;
+		}	
 
 		if(currentEquipment == null)
 		{
@@ -215,6 +218,8 @@
 
 			Application.Current.MainPage.DisplayAlert("Debug", "Equipment Updated!", "OK");
 		}
+
+		sysManagement.WriteEquipmentData();
 	}
 
 	private void ClearEquipmentInfo()
@@ -240,6 +245,8 @@
 		equipmentStatus = string.Empty;
 
 		sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
+
+		sysManagement.WriteEquipmentData();
 
 		currentEquipment = null;
 	}

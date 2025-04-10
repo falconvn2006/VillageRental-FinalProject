@@ -3,13 +3,16 @@
 @using VillageRental.Components.Instances
 @inject SystemManagement sysManagement
 
-<h3 class="text-center">Report Generator</h3>
+<h1 class="text-center">Report Generator</h1>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
 	<div class="bg-secondary p-4 rounded-2">
 		<h3 class="text-center">Report Type</h3>
 		<div>
-			<select class="form-select d-inline" @bind="reportType">
+			<select class="form-select d-inline" value="@reportType" @onchange="(ChangeEventArgs __e) => {
+					reportType = __e.Value.ToString();
+					showTable = false;
+				}" >
 				<option selected value="ListAllClients">List all clients</option>
 				<option value="ListAllEquipment">List all equipment</option>
 				<option value="ListAllCategory">List all category</option>
@@ -29,7 +32,7 @@
 	<div class="bg-secondary p-3 rounded-2 flex-fill">
 		<h3 class="text-center">Report</h3>
 		<div class="overflow-auto overflow-scroll">
-			<table class="table">
+			<table class="table table-bordered table-light">
 				@if (showTable)
 				{
 					if (reportType == "ListAllClients")
@@ -86,6 +89,24 @@
 							}
 						</tbody>
 					}
+					else if (reportType == "ListAllCategory")
+					{
+						<thead>
+							<tr>
+								<th scope="col">Id</th>
+								<th scope="col">Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (CategoryItem item in sysManagement.categoryList)
+							{
+								<tr>
+									<th scope="row">@item.CategoryID</th>
+									<td>@item.Description</td>
+								</tr>
+							}
+						</tbody>
+					}
 					else if (reportType == "ListAllRentalInformation")
 					{
 						<thead>
@@ -99,6 +120,7 @@
 								<th scope="col">Rental Date</th>
 								<th scope="col">Return Date</th>
 								<th scope="col">Cost</th>
+								<th scope="col">Quantity</th>
 								<th scope="col">Rental Status</th>
 							</tr>
 						</thead>
@@ -141,7 +163,17 @@
 											<p>@($"${rentalItem.CostOfRental}")</p>
 										}
 									</td>
+									<td>
+										@foreach (RentalItem rentalItem in information.rentalItemList)
+										{
+											<p>@rentalItem.Quantity</p>
+										}
+									</td>
 									<td>@information.RentalStatus</td>
+								</tr>
+								<tr>
+									<th scope="row" colspan="3">Total Rental Cost: </th>
+									<td colspan="8">$@information.TotalCostToRent</td>
 								</tr>
 							}
 						</tbody>

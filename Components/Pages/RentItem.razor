@@ -1,0 +1,223 @@
+﻿@page "/rentitem"
+@using VillageRental.Components.Data
+@using VillageRental.Components.Instances
+@inject SystemManagement sysManagement
+
+<h1 class="text-center">Rent Equipment</h1>
+
+<div class="d-flex flex-row gap-4 justify-content-between">
+	<div class="bg-secondary p-4 rounded-2 flex-fill">
+		<h3 class="text-center">Rental Details</h3>
+		<div>
+			<!-- Add input fields -->
+			<div class="mb-3 row">
+				<label for="rentalID" class="col-sm-3 col-form-label">Rental ID</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control" id="rentalID" @bind="rentalID" />
+				</div>
+			</div>
+			<div class="mb-3 row">
+				<label for="customerID" class="col-sm-3 col-form-label">Customer ID</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control" id="customerID" @bind="customerID" />
+				</div>
+			</div>
+			<div class="mb-3 row">
+				<label for="currentDate" class="col-sm-3 col-form-label">Date</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control" id="currentDate" @bind="currentDate" />
+				</div>
+			</div>
+			<div class="mb-3 row">
+				<label for="rentalStatus" class="col-sm-3 col-form-label">Rental Status</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control" id="rentalStatus" @bind="rentalStatus" />
+				</div>
+			</div>
+			<p>TOTAL COST: $@totalCost</p>
+		</div>
+		<hr />
+		<div class="text-center">
+			<div class="bg-white overflow-scroll rounded-3">
+				<!--Insert a foreach to display each button/link here -->
+				@foreach (RentalItem item in currentRentalItemList)
+				{
+					<div>
+						<p>Equipment ID: @item.EquipmentID</p>
+						<div class="row mt-2">
+							<div class="col">
+								<p>Rental Date: @($"{item.RentalDate.Day}/{item.RentalDate.Month}/{item.RentalDate.Year}")</p>
+								<p>Return Date: @($"{item.ReturnDate.Day}/{item.ReturnDate.Month}/{item.ReturnDate.Year}")</p>
+							</div>
+							<div class="col">
+								<p>Cost of Rental: $@item.CostOfRental</p>
+								<p>Quantity: @item.Quantity</p>
+							</div>
+						</div>
+						<button class="btn btn-secondary" @onclick="() => currentRentalItemList.Remove(item)">Remove</button>
+					</div>
+				}
+			</div>
+			<div class="row mt-2">
+				<div class="col">
+					<button class="btn btn-primary" @onclick="Rent">Rent</button>
+					<button class="btn btn-primary" @onclick="ClearRentalDetails">Clear</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="bg-secondary p-3 rounded-2">
+		<h3 class="text-center">Add Rental Item</h3>
+		<div>
+			<div class="mb-3 row">
+				<label for="equipmentID" class="col-sm-3 col-form-label">Equipment ID</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control" id="equipmentID" value="@equipmentID" @onchange="(ChangeEventArgs __e) => {
+							equipmentID = __e.Value.ToString();
+							UpdateRentalCost();
+						}" />
+				</div>
+			</div>
+			<div class="mb-3 row">
+				<label for="rentalDate" class="col-sm-3 col-form-label">Rental Date</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control" id="rentalDate" value="@rentalDate" @onchange="(ChangeEventArgs __e) => {
+							rentalDate = __e.Value.ToString();
+							UpdateRentalCost();
+						}" />
+				</div>
+			</div>
+			<div class="mb-3 row">
+				<label for="returnDate" class="col-sm-3 col-form-label">Return Date</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control" id="returnDate" value="@returnDate" @onchange="(ChangeEventArgs __e) => {
+							returnDate = __e.Value.ToString();
+							UpdateRentalCost();
+						}" />
+				</div>
+			</div>
+			<div class="mb-3 row">
+				<label for="quantity" class="col-sm-3 col-form-label">Quantity</label>
+				<div class="col-sm-9">
+					<input type="number" class="form-control" id="quantity" value="@quantity" @onchange="(ChangeEventArgs __e) => {
+							quantity = __e.Value.ToString();
+							UpdateRentalCost();
+						}" />
+				</div>
+			</div>
+			<div class="mb-3 row">
+				<label for="costOfRental" class="col-sm-3 col-form-label">Cost of Rental</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control" id="dailyRentalCost" @bind="costOfRental" disabled />
+				</div>
+			</div>
+			<div class="container gap-4 text-center">
+				<div class="row mt-2">
+					<div class="col">
+						<button class="btn btn-primary" @onclick="AddRentalItem">Add</button>
+						<button class="btn btn-primary" @onclick="ClearRentalItem">Clear</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+@code {
+	private RentalInformation currentRentalInformation;
+	private List<RentalItem> currentRentalItemList = new List<RentalItem>();
+
+	private string rentalID, customerID, currentDate, rentalStatus, totalCost;
+
+	private string equipmentID, rentalDate, returnDate, quantity, costOfRental;
+
+	private void Rent()
+	{
+		if (string.IsNullOrEmpty(rentalID) || string.IsNullOrEmpty(customerID) || string.IsNullOrEmpty(currentDate) || string.IsNullOrEmpty(rentalStatus))
+			return;
+
+		currentRentalInformation = new RentalInformation(Convert.ToInt32(rentalID), Convert.ToDateTime(currentDate), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
+		foreach(RentalItem item in currentRentalItemList)
+		{
+			currentRentalInformation.AddRentalItem(item);
+		}
+
+		sysManagement.RentItem(currentRentalInformation);
+
+		
+		Application.Current.MainPage.DisplayAlert("Debug", "Rental Information Created!", "OK");
+
+		sysManagement.WriteRentalInformationData();
+
+		currentRentalInformation = null;
+
+		ClearRentalDetails();
+		ClearRentalItem();
+	}
+
+	private void AddRentalItem()
+	{
+		if (string.IsNullOrEmpty(equipmentID) || string.IsNullOrEmpty(rentalDate) || string.IsNullOrEmpty(returnDate) || string.IsNullOrEmpty(quantity) || string.IsNullOrEmpty(costOfRental))
+		{
+			return;
+		}
+
+		if (sysManagement.FindEquipment(Convert.ToInt32(equipmentID)) == null)
+		{
+			Application.Current.MainPage.DisplayAlert("Debug", "Equipment Not Found", "OK");
+			return;
+		}
+
+		if(sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).AvailableQuantity < Convert.ToInt32(quantity))
+		{
+			Application.Current.MainPage.DisplayAlert("Debug", "Rental quantity is LARGER than available quantity", "OK");
+			return;
+		}
+
+		RentalItem newRentalItem = new RentalItem(Convert.ToInt32(equipmentID), Convert.ToDateTime(rentalDate), Convert.ToDateTime(returnDate), Convert.ToDouble(costOfRental), Convert.ToInt32(quantity));
+		currentRentalItemList.Add(newRentalItem);
+
+		Application.Current.MainPage.DisplayAlert("Debug", "Rental Item Added!", "OK");
+
+		UpdateTotalCost();
+
+		ClearRentalItem();
+	}
+
+	private void ClearRentalItem()
+	{
+		equipmentID = rentalDate = returnDate = quantity = costOfRental = string.Empty;
+	}
+
+	private void ClearRentalDetails()
+	{
+		rentalID = customerID = currentDate = rentalStatus = totalCost = string.Empty;
+
+		currentRentalItemList.Clear();
+	}
+
+	private void UpdateRentalCost()
+	{
+		if (string.IsNullOrEmpty(equipmentID) || string.IsNullOrEmpty(rentalDate) || string.IsNullOrEmpty(returnDate) || string.IsNullOrEmpty(quantity))
+			return;
+		if (sysManagement.FindEquipment(Convert.ToInt32(equipmentID)) == null)
+			return;
+
+		costOfRental = ((double)(Convert.ToDateTime(returnDate) - Convert.ToDateTime(rentalDate)).Days * Convert.ToInt32(quantity) * sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).DailyRentalCost).ToString();
+	}
+
+	private void UpdateTotalCost()
+	{
+		if (currentRentalItemList.Count == 0)
+			return;	
+		
+
+		double _totalCost = 0.0;
+		foreach (RentalItem item in currentRentalItemList)
+			_totalCost += item.CostOfRental;
+
+		totalCost = _totalCost.ToString();
+	}
+}

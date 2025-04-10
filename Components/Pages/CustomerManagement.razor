@@ -2,7 +2,8 @@
 @using VillageRental.Components.Instances
 @using VillageRental.Components.Data
 @inject SystemManagement sysManagement
-<h3 class="text-center">Customer Management</h3>
+
+<h1 class="text-center">Customer Management</h1>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
 	<div class="bg-secondary p-4 rounded-2">
@@ -170,7 +171,10 @@
 	private void CreateCustomer()
 	{
 		if (string.IsNullOrEmpty(customerID) || string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName) || string.IsNullOrEmpty(phoneNumber) || string.IsNullOrEmpty(email))
+		{
+			currentCustomer = null;		
 			return;
+		}
 
 		if(currentCustomer == null)
 		{
@@ -193,6 +197,8 @@
 
 			Application.Current.MainPage.DisplayAlert("Debug", "Customer Updated!", "OK");
 		}
+
+		sysManagement.WriteCustomerData();
 	}
 
 	private void DeleteCustomerRecord()
@@ -211,5 +217,7 @@
 		ClearResult();
 
 		Application.Current.MainPage.DisplayAlert("Debug", "Customer Record Deleted!", "OK");
+
+		sysManagement.WriteCustomerData();
 	}
 }

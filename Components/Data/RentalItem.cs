@@ -19,8 +19,8 @@ namespace VillageRental.Components.Data
             EquipmentID = _equipmentID;
             RentalDate = _rentalDate;
             ReturnDate = _returnDate;
-            CostOfRental = _costOfRental;
             Quantity = _quantity;
+            CostOfRental = _costOfRental * Quantity;
         }
     }
 }

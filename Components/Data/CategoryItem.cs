@@ -16,5 +16,10 @@ namespace VillageRental.Components.Data
             CategoryID = _categoryID;
             Description = _description;
         }
-    }
+
+		public override string ToString()
+		{
+			return $"{CategoryID};{Description}";
+		}
+	}
 }
