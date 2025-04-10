@@ -10,7 +10,7 @@ namespace VillageRental.Components.Instances
     public static class ExampleData
     {
 		public static string CategoryContent = "10;Power tools\r\n20;Yard equipment\r\n30;Compressors\r\n40;Generators\r\n50;Air Tools";
-        public static string RentalInformationContent = "101;10;Hammer drill;Powerful drill for concrete and masonry;25,99;\r\n201;20;Chainsaw;Gas-powered chainsaw for cutting wood;49,99;\r\n202;20;Lawn mower;Self-propelled lawn mower with mulching function;19,99;\r\n301;30;Small Compressor;5 Gallon Compressor-Portable;14,99;\r\n501;50;Brad Nailer;Brad Nailer. Requires 3/4 to 1 1/2 Brad Nails;10,99;";
+        public static string RentalInformationContent = "1000;15/02/2024;1001;201;20/02/2024;23/02/2024;149,97\r\n1001;16/02/2024;1002;501;21/02/2024;25/02/2024;43,96";
         public static string CustomerContent = "1001;Doe;John;(555) 555-1212;jd@sample.net;False\r\n1002;Smith;Jane;(555) 555-3434;js@live.com;False\r\n1003;Lee;Michael;(555) 555-5656;ml@sample.net;False";
         public static string EquipmentContent = "101;10;Hammer drill;Powerful drill for concrete and masonry;25,99;1;Good\r\n201;20;Chainsaw;Gas-powered chainsaw for cutting wood;49,99;1;Good\r\n202;20;Lawn mower;Self-propelled lawn mower with mulching function;19,99;1;Good\r\n301;30;Small Compressor;5 Gallon Compressor-Portable;14,99;1;Good\r\n501;50;Brad Nailer;Brad Nailer. Requires 3/4 to 1 1/2 Brad Nails;10,99;1;Good";
 	}
@@ -45,11 +45,6 @@ namespace VillageRental.Components.Instances
                         stream.Write(ExampleData.CategoryContent);
                     }
 
-                    using (StreamWriter stream = File.CreateText(fileRentalInformationPath))
-                    {
-                        stream.Write(ExampleData.RentalInformationContent);
-                    }
-
                     using (StreamWriter stream = File.CreateText(fileCustomerPath))
                     {
                         stream.Write(ExampleData.CustomerContent);
@@ -59,7 +54,12 @@ namespace VillageRental.Components.Instances
                     {
                         stream.Write(ExampleData.EquipmentContent);
                     }
-                }
+
+					using (StreamWriter stream = File.CreateText(fileRentalInformationPath))
+					{
+						stream.Write(ExampleData.RentalInformationContent);
+					}
+				}
 
                 using (StreamReader stream = File.OpenText(fileCategoryPath))
                 {
@@ -108,6 +108,8 @@ namespace VillageRental.Components.Instances
                         AddEquipmentToList(newEquipment);
                     }
                 }
+
+                LoadRentalInformation(fileRentalInformationPath);
             }
         }
 
@@ -313,6 +315,58 @@ namespace VillageRental.Components.Instances
         public void RentItem(RentalInformation _rentalInformation)
         {
             rentalInformationList.Add(_rentalInformation);
+        }
+
+        public RentalInformation FindRentalInformation(int _rentalId)
+        {
+            foreach(RentalInformation information in  rentalInformationList)
+            {
+                if(information.RentalID == _rentalId)
+                    return information;
+            }
+
+
+            return null;
+        }
+
+        private void LoadRentalInformation(string _filePath)
+        {
+            using (StreamReader stream = File.OpenText(_filePath))
+            {
+                while (!stream.EndOfStream)
+                {
+                    string[] content = stream.ReadLine().Trim().Split(';');
+                    int rentalId = Convert.ToInt32(content[0]);
+                    DateTime currentDate = Convert.ToDateTime(content[1]);
+                    int customerId = Convert.ToInt32(content[2]);
+                    int equipmentId = Convert.ToInt32(content[3]);
+                    DateTime rentalDate = Convert.ToDateTime(content[4]);
+                    DateTime returnDate = Convert.ToDateTime(content[5]);
+                    double totalCost = Convert.ToDouble(content[6]);
+
+                    RentalInformation rentalInformation = FindRentalInformation(rentalId);
+
+                    if(rentalInformation == null)
+                    {
+						string customerLastName = FindCustomer(customerId).LastName;
+						rentalInformation = new RentalInformation(rentalId, currentDate, customerId, customerLastName, "Renting");
+
+                        double rentalCost = ((double)(returnDate - rentalDate).Days * FindEquipment(equipmentId).DailyRentalCost);
+                        RentalItem newRentalItem = new RentalItem(equipmentId, rentalDate, returnDate, rentalCost, 1);
+
+                        rentalInformation.AddRentalItem(newRentalItem);
+					}
+                    else
+                    {
+						double rentalCost = ((double)(returnDate - rentalDate).Days * FindEquipment(equipmentId).DailyRentalCost);
+						RentalItem newRentalItem = new RentalItem(equipmentId, rentalDate, returnDate, rentalCost, 1);
+
+                        rentalInformation.AddRentalItem(newRentalItem);
+					}
+
+                    rentalInformationList.Add(rentalInformation);
+                }
+            }
         }
     }
 }

@@ -1,0 +1,160 @@
+﻿@page "/reportgenerator"
+@using VillageRental.Components.Data
+@using VillageRental.Components.Instances
+@inject SystemManagement sysManagement
+
+<h3 class="text-center">Report Generator</h3>
+
+<div class="d-flex flex-row gap-4 justify-content-between ">
+	<div class="bg-secondary p-4 rounded-2">
+		<h3 class="text-center">Report Type</h3>
+		<div>
+			<select class="form-select d-inline" @bind="reportType">
+				<option selected value="ListAllClients">List all clients</option>
+				<option value="ListAllEquipment">List all equipment</option>
+				<option value="ListAllCategory">List all category</option>
+				<option value="ListAllRentalInformation">List all rental information</option>
+			</select>
+			<div class="container text-center mt-3">
+				<div class="row">
+					<div class="col gap-3">
+						<button class="btn btn-primary" @onclick="() => showTable = true">Generate</button>
+						<button class="btn btn-primary" @onclick="() => showTable = false" >Clear</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="bg-secondary p-3 rounded-2 flex-fill">
+		<h3 class="text-center">Report</h3>
+		<div class="overflow-auto overflow-scroll">
+			<table class="table">
+				@if (showTable)
+				{
+					if (reportType == "ListAllClients")
+					{
+						<thead>
+							<tr>
+								<th scope="col">Id</th>
+								<th scope="col">Last Name</th>
+								<th scope="col">First Name</th>
+								<th scope="col">Contact Phone</th>
+								<th scope="col">Email</th>
+								<th scope="col">Is Banned?</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach(Customer customer in sysManagement.customerList)
+							{
+								<tr>
+									<th scope="row">@customer.CustomerID</th>
+									<td>@customer.LastName</td>
+									<td>@customer.FirstName</td>
+									<td>@customer.PhoneNumber</td>
+									<td>@customer.Email</td>
+									<td>@(customer.isBanned ? "Yes" : "No")</td>
+								</tr>
+							}
+						</tbody>
+					}
+					else if (reportType == "ListAllEquipment")
+					{
+						<thead>
+							<tr>
+								<th scope="col">Id</th>
+								<th scope="col">Category Id</th>
+								<th scope="col">Name</th>
+								<th scope="col">Description</th>
+								<th scope="col">Daily Rate</th>
+								<th scope="col">Quantity</th>
+								<th scope="col">Equipment Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (Equipment equipment in sysManagement.equipmentList)
+							{
+								<tr>
+									<th scope="row">@equipment.EquipmentID</th>
+									<td>@equipment.CategoryID</td>
+									<td>@equipment.Name</td>
+									<td>@equipment.Description</td>
+									<td>@equipment.DailyRentalCost</td>
+									<td>@equipment.AvailableQuantity</td>
+									<td>@equipment.EquipmentStatus</td>
+								</tr>
+							}
+						</tbody>
+					}
+					else if (reportType == "ListAllRentalInformation")
+					{
+						<thead>
+							<tr>
+								<th scope="col">Id</th>
+								<th scope="col">Date</th>
+								<th scope="col">Customer Id</th>
+								<th scope="col">Customer Last Name</th>
+								<th scope="col">Equipment Id</th>
+								<th scope="col">Equipment Name</th>
+								<th scope="col">Rental Date</th>
+								<th scope="col">Return Date</th>
+								<th scope="col">Cost</th>
+								<th scope="col">Rental Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (RentalInformation information in sysManagement.rentalInformationList)
+							{
+								<tr>
+									<th scope="row">@information.RentalID</th>
+									<td>@($"{information.CurrentDate.Day}/{information.CurrentDate.Month}/{information.CurrentDate.Year}")</td>
+									<td>@information.CustomerID</td>
+									<td>@information.CustomerLastName</td>
+									<td>
+										@foreach(RentalItem rentalItem in information.rentalItemList)
+										{
+											<p>@rentalItem.EquipmentID</p>
+										}
+									</td>
+									<td>
+										@foreach (RentalItem rentalItem in information.rentalItemList)
+										{
+											string equipmentName = sysManagement.FindEquipment(rentalItem.EquipmentID).Name;
+											<p>@equipmentName</p>
+										}
+									</td>
+									<td>
+										@foreach (RentalItem rentalItem in information.rentalItemList)
+										{
+											<p>@($"{rentalItem.RentalDate.Day}/{rentalItem.RentalDate.Month}/{rentalItem.RentalDate.Year}")</p>
+										}
+									</td>
+									<td>
+										@foreach (RentalItem rentalItem in information.rentalItemList)
+										{
+											<p>@($"{rentalItem.ReturnDate.Day}/{rentalItem.ReturnDate.Month}/{rentalItem.ReturnDate.Year}")</p>
+										}
+									</td>
+									<td>
+										@foreach (RentalItem rentalItem in information.rentalItemList)
+										{
+											<p>@($"${rentalItem.CostOfRental}")</p>
+										}
+									</td>
+									<td>@information.RentalStatus</td>
+								</tr>
+							}
+						</tbody>
+					}
+				}
+			</table>
+		</div>
+	</div>
+</div>
+
+
+@code {
+	private string reportType = "ListAllClients";
+
+	private bool showTable = false;
+}

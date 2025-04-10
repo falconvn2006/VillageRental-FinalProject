@@ -7,8 +7,14 @@
 
 Welcome to your new app.
 
-<p>The application is currently storing it's data in this path: "@applicationStoragePath"</p><br/>
-<p>Loaded @sysManagement.categoryList.Count category into the system</p><br/>
+<p>The application is currently storing it's data in this path:</p>
+<p>"@applicationStoragePath"</p>
+
+<p>Loaded @sysManagement.customerList.Count customers into the system</p>
+<p>Loaded @sysManagement.equipmentList.Count equipments into the system</p>
+<p>Loaded @sysManagement.categoryList.Count category into the system</p>
+
+
 @code{
 	private string applicationStoragePath = FileSystem.Current.AppDataDirectory;
 }
