@@ -1,7 +1,9 @@
 ﻿@page "/"
 @using VillageRental.Components.Instances
 @using VillageRental.Components.Data
+@using VillageRental.Components.Data.Exceptions
 @inject SystemManagement sysManagement
+@inject DatabaseManager dbManager
 
 <h1>Hello, Admin!</h1>
 
@@ -17,4 +19,19 @@ Welcome to Village Rentals. Where you will manage your customer data, equipment 
 
 @code{
 	private string applicationStoragePath = FileSystem.Current.AppDataDirectory;
+
+	protected override void OnInitialized()
+	{
+		try
+		{
+			dbManager.LoadCategory(sysManagement, DataFilePath.fileCategoryPath);
+			dbManager.LoadCustomer(sysManagement, DataFilePath.fileCustomerPath);
+			dbManager.LoadEquipment(sysManagement, DataFilePath.fileEquipmentPath);
+			dbManager.LoadRentalInformation(sysManagement, DataFilePath.fileRentalInformationPath);
+		}
+		catch (SystemHandler systemHandler)
+		{
+			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{systemHandler.ErrorCode}: {systemHandler.Message}", "OK");
+		}
+	}
 }

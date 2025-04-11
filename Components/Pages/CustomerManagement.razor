@@ -3,6 +3,7 @@
 @using VillageRental.Components.Data
 @using VillageRental.Components.Data.Exceptions
 @inject SystemManagement sysManagement
+@inject DatabaseManager dbManager
 
 <h1 class="text-center">Customer Management</h1>
 
@@ -199,7 +200,7 @@
 			Application.Current.MainPage.DisplayAlert("Notification", "Customer Updated!", "OK");
 		}
 
-		sysManagement.WriteCustomerData();
+		dbManager.WriteCustomerData(sysManagement);
 	}
 
 	private void DeleteCustomerRecord()
@@ -210,7 +211,7 @@
 		try
 		{
 			sysManagement.RemoveCustomer(currentCustomer.CustomerID);
-			sysManagement.WriteCustomerData();
+			dbManager.WriteCustomerData(sysManagement);
 
 			Application.Current.MainPage.DisplayAlert("Notification", "Customer Record Deleted!", "OK");
 		}

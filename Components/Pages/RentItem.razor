@@ -2,6 +2,7 @@
 @using VillageRental.Components.Data
 @using VillageRental.Components.Instances
 @inject SystemManagement sysManagement
+@inject DatabaseManager dbManager
 
 <h1 class="text-center">Rent Equipment</h1>
 
@@ -149,7 +150,7 @@
 		
 		Application.Current.MainPage.DisplayAlert("Notification", "Rental Information Created!", "OK");
 
-		sysManagement.WriteRentalInformationData();
+		dbManager.WriteRentalInformationData(sysManagement);
 
 		currentRentalInformation = null;
 

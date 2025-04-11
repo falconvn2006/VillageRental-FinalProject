@@ -18,6 +18,8 @@ namespace VillageRental
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddSingleton<SystemManagement>();
+            builder.Services.AddSingleton<DatabaseManager>();
+
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();

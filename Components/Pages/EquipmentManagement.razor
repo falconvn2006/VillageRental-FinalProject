@@ -3,6 +3,7 @@
 @using VillageRental.Components.Data.Exceptions
 @using VillageRental.Components.Instances
 @inject SystemManagement sysManagement
+@inject DatabaseManager dbManager
 
 <h2 class="text-center">Equipment Management</h2>
 
@@ -267,7 +268,7 @@
 			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Updated!", "OK");
 		}
 
-		sysManagement.WriteEquipmentData();
+		dbManager.WriteEquipmentData(sysManagement);
 	}
 
 	private void ClearEquipmentInfo()
@@ -296,7 +297,7 @@
 		{
 			sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
 
-			sysManagement.WriteEquipmentData();
+			dbManager.WriteEquipmentData(sysManagement);
 		}
 		catch(SystemHandler systemHandler)
 		{
@@ -331,7 +332,7 @@
 
 			sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
 
-			sysManagement.WriteEquipmentData();
+			dbManager.WriteEquipmentData(sysManagement);
 
 			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Sold!", "OK");
 		}

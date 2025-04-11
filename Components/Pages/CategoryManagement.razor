@@ -3,6 +3,7 @@
 @using VillageRental.Components.Data
 @using VillageRental.Components.Data.Exceptions
 @inject SystemManagement sysManagement
+@inject DatabaseManager dbManager
 <h1 class="text-center">Category Management</h1>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
@@ -109,7 +110,7 @@
 			Application.Current.MainPage.DisplayAlert("Notification", "Category Updated!", "OK");
 		}
 
-		sysManagement.WriteCategoryData();
+		dbManager.WriteCategoryData(sysManagement);
 	}
 
 	private void DeleteCategoryRecord()
@@ -120,7 +121,7 @@
 		try
 		{
 			sysManagement.RemoveCategory(currentCategory.CategoryID);	
-			sysManagement.WriteCategoryData();
+			dbManager.WriteCategoryData(sysManagement);
 
 			Application.Current.MainPage.DisplayAlert("Notification", "Category Record Deleted!", "OK");
 		}
