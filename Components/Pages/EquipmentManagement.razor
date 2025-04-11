@@ -107,12 +107,12 @@
 
 @if (showModal)
 {
-	<div class="modal fade show" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: block; background: #00000080;">
+	<div class="modal fade show" id="exampleModal" tabindex="-1" style="display: block; background: #00000080;">
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h3 class="modal-title fs-5" id="exampleModalLabel">Selling equipment with information</h3>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="() => showModal = false"></button>
+					<button type="button" class="btn-close" @onclick="() => showModal = false"></button>
 				</div>
 				<div class="modal-body">
 					<div class="container gap-4 text-center">
@@ -139,7 +139,7 @@
 					</div>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showModal = false">Close</button>
+					<button type="button" class="btn btn-secondary" @onclick="() => showModal = false">Close</button>
 					<button type="button" class="btn btn-primary" @onclick="Sell">Sell</button>
 				</div>
 			</div>
