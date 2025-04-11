@@ -1,6 +1,7 @@
 ﻿@page "/customermanagement"
 @using VillageRental.Components.Instances
 @using VillageRental.Components.Data
+@using VillageRental.Components.Data.Exceptions
 @inject SystemManagement sysManagement
 
 <h1 class="text-center">Customer Management</h1>
@@ -181,7 +182,7 @@
 			Customer newCustomer = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
 			sysManagement.AddCustomerToList(newCustomer);
 
-			Application.Current.MainPage.DisplayAlert("Debug", "Customer Created!", "OK");
+			Application.Current.MainPage.DisplayAlert("Notification", "Customer Created!", "OK");
 
 			customerID = string.Empty;
 			firstName = string.Empty;
@@ -195,7 +196,7 @@
 			Customer newCustomerData = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
 			sysManagement.UpdateCustomer(currentCustomer.CustomerID, newCustomerData);
 
-			Application.Current.MainPage.DisplayAlert("Debug", "Customer Updated!", "OK");
+			Application.Current.MainPage.DisplayAlert("Notification", "Customer Updated!", "OK");
 		}
 
 		sysManagement.WriteCustomerData();
@@ -206,18 +207,25 @@
 		if (currentCustomer == null)
 			return;
 
-		sysManagement.RemoveCustomer(currentCustomer.CustomerID);
-		customerID = string.Empty;
-		firstName = string.Empty;
-		lastName = string.Empty;
-		phoneNumber = string.Empty;
-		email = string.Empty;
-		currentCustomer = null;
+		try
+		{
+			sysManagement.RemoveCustomer(currentCustomer.CustomerID);
+			sysManagement.WriteCustomerData();
 
-		ClearResult();
-
-		Application.Current.MainPage.DisplayAlert("Debug", "Customer Record Deleted!", "OK");
-
-		sysManagement.WriteCustomerData();
+			Application.Current.MainPage.DisplayAlert("Notification", "Customer Record Deleted!", "OK");
+		}
+		catch(SystemHandler systemHandler)
+		{
+			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{systemHandler.ErrorCode}: {systemHandler.Message}", "OK");
+		}
+		finally
+		{
+			customerID = string.Empty;
+			firstName = string.Empty;
+			lastName = string.Empty;
+			phoneNumber = string.Empty;
+			email = string.Empty;
+			currentCustomer = null;
+		}
 	}
 }

@@ -147,7 +147,7 @@
 		sysManagement.RentItem(currentRentalInformation);
 
 		
-		Application.Current.MainPage.DisplayAlert("Debug", "Rental Information Created!", "OK");
+		Application.Current.MainPage.DisplayAlert("Notification", "Rental Information Created!", "OK");
 
 		sysManagement.WriteRentalInformationData();
 
@@ -166,20 +166,20 @@
 
 		if (sysManagement.FindEquipment(Convert.ToInt32(equipmentID)) == null)
 		{
-			Application.Current.MainPage.DisplayAlert("Debug", "Equipment Not Found", "OK");
+			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Not Found", "OK");
 			return;
 		}
 
 		if(sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).AvailableQuantity < Convert.ToInt32(quantity))
 		{
-			Application.Current.MainPage.DisplayAlert("Debug", "Rental quantity is LARGER than available quantity", "OK");
+			Application.Current.MainPage.DisplayAlert("Notification", "Rental quantity is LARGER than available quantity", "OK");
 			return;
 		}
 
 		RentalItem newRentalItem = new RentalItem(Convert.ToInt32(equipmentID), Convert.ToDateTime(rentalDate), Convert.ToDateTime(returnDate), Convert.ToDouble(costOfRental), Convert.ToInt32(quantity));
 		currentRentalItemList.Add(newRentalItem);
 
-		Application.Current.MainPage.DisplayAlert("Debug", "Rental Item Added!", "OK");
+		Application.Current.MainPage.DisplayAlert("Notification", "Rental Item Added!", "OK");
 
 		UpdateTotalCost();
 

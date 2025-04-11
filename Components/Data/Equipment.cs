@@ -15,7 +15,6 @@ namespace VillageRental.Components.Data
         public double DailyRentalCost { get; set; }
         public int AvailableQuantity { get; set; }
         public string EquipmentStatus { get; set; }
-        private bool isSold;
 
         public Equipment(int _equipmentID, int _categoryID, string _name, string _description, double _dailyRentalCost, int _availableQuantity, string _equipmentStatus)
         {
@@ -26,8 +25,6 @@ namespace VillageRental.Components.Data
             DailyRentalCost = _dailyRentalCost;
             AvailableQuantity = _availableQuantity;
             EquipmentStatus = _equipmentStatus;
-
-            isSold = false;
         }
 
         public void UpdateEquipment(Equipment _equipment)
@@ -40,11 +37,6 @@ namespace VillageRental.Components.Data
 			AvailableQuantity = _equipment.AvailableQuantity;
 			EquipmentStatus = _equipment.EquipmentStatus;
 		}
-
-        public void SetIsSold(bool _isSold)
-        {
-            isSold = _isSold;
-        }
 
 		public override string ToString()
 		{

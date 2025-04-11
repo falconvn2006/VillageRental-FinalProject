@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VillageRental.Components.Data;
+﻿using VillageRental.Components.Data;
+using VillageRental.Components.Data.Exceptions;
 
 namespace VillageRental.Components.Instances
 {
@@ -44,15 +39,20 @@ namespace VillageRental.Components.Instances
             if(writeExampleDataIfNotExits)
                 WriteExampleData(false);
 
-			LoadCategory(DataFilePath.fileCategoryPath);
+            try
+            {
+				LoadCategory(DataFilePath.fileCategoryPath);
 
-            LoadCustomer(DataFilePath.fileCustomerPath);
+				LoadCustomer(DataFilePath.fileCustomerPath);
 
-            LoadEquipment(DataFilePath.fileEquipmentPath);
+				LoadEquipment(DataFilePath.fileEquipmentPath);
 
-            LoadRentalInformation(DataFilePath.fileRentalInformationPath);
-
-            Debug.WriteLine("Application Started");
+				LoadRentalInformation(DataFilePath.fileRentalInformationPath);
+			}
+            catch (SystemHandler systemHandler)
+            {
+                Application.Current.MainPage.DisplayAlert("Error encounter!", "401: Cannot load previously saved data", "OK");
+            }
         }
 
 
@@ -132,7 +132,13 @@ namespace VillageRental.Components.Instances
 
         public void RemoveCustomer(int _customerId)
         {
-            Customer foundCustomer = FindCustomer(_customerId);
+			foreach (RentalInformation rentalInformation in rentalInformationList)
+			{
+                if (rentalInformation.CustomerID == _customerId)
+					throw new SystemHandler(301, "There is an existing rental information with this customer ID. Deletion cannot perform.");
+			}
+
+			Customer foundCustomer = FindCustomer(_customerId);
             if (foundCustomer != null)
             {
                 customerList.Remove(foundCustomer);
@@ -157,16 +163,20 @@ namespace VillageRental.Components.Instances
 
         public void RemoveEquipmentFromInventory(int _equipmentID)
         {
-            Equipment equipmentFound = FindEquipment(_equipmentID);
+			foreach (RentalInformation rentalInformation in rentalInformationList)
+            {
+                foreach(RentalItem rentalItem in rentalInformation.rentalItemList)
+                {
+                    if(rentalItem.EquipmentID == _equipmentID)
+                    {
+                        throw new SystemHandler(302, "There is an existing rental information with this equipment ID. Deletion cannot perform.");
+                    }
+                }
+            }
+
+			Equipment equipmentFound = FindEquipment(_equipmentID);
             if (equipmentFound != null)
                 equipmentList.Remove(equipmentFound);
-        }
-
-        public void SellEquipment(int _equipmentID, double _priceToSell)
-        {
-            Equipment equipmentFound = FindEquipment(_equipmentID);
-            if (equipmentFound != null)
-                equipmentFound.SetIsSold(true);
         }
 
         public void UpdateEquipment(int _equipmentID, Equipment _newEquipmentData)
@@ -237,6 +247,22 @@ namespace VillageRental.Components.Instances
 
         public void RemoveCategory(int _categoryID)
         {
+            foreach(Equipment equipment in equipmentList)
+            {
+                if (equipment.CategoryID == _categoryID)
+                    throw new SystemHandler(304, "There is an existing equipment with this category ID. Deletion cannot perform.");
+            }
+
+            foreach(RentalInformation rentalInformation in rentalInformationList)
+            {
+                foreach(RentalItem rentalItem in rentalInformation.rentalItemList)
+                {
+                    if (FindEquipment(rentalItem.EquipmentID).CategoryID == _categoryID)
+                        throw new SystemHandler(303, "There is an existing rental information with an equipment that has this category ID. Deletion cannot perform.");
+                }
+            }
+
+
             CategoryItem categoryFound = FindCategory(_categoryID);
             if(categoryFound != null)
                 categoryList.Remove(categoryFound);

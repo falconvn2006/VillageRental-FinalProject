@@ -1,0 +1,155 @@
+﻿@using VillageRental.Components.Data;
+@using VillageRental.Components.Instances;
+@inject SystemManagement sysManagement
+
+
+<table class="table table-bordered table-light">
+	@if (ReportType == "ListAllClients")
+	{
+		<thead>
+			<tr>
+				<th scope="col">Id</th>
+				<th scope="col">Last Name</th>
+				<th scope="col">First Name</th>
+				<th scope="col">Contact Phone</th>
+				<th scope="col">Email</th>
+				<th scope="col">Is Banned?</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (Customer customer in sysManagement.customerList)
+			{
+				<tr>
+					<th scope="row">@customer.CustomerID</th>
+					<td>@customer.LastName</td>
+					<td>@customer.FirstName</td>
+					<td>@customer.PhoneNumber</td>
+					<td>@customer.Email</td>
+					<td>@(customer.isBanned ? "Yes" : "No")</td>
+				</tr>
+			}
+		</tbody>
+	}
+	else if (ReportType == "ListAllEquipment")
+	{
+		<thead>
+			<tr>
+				<th scope="col">Id</th>
+				<th scope="col">Category Id</th>
+				<th scope="col">Name</th>
+				<th scope="col">Description</th>
+				<th scope="col">Daily Rate</th>
+				<th scope="col">Quantity</th>
+				<th scope="col">Equipment Status</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (Equipment equipment in sysManagement.equipmentList)
+			{
+				<tr>
+					<th scope="row">@equipment.EquipmentID</th>
+					<td>@equipment.CategoryID</td>
+					<td>@equipment.Name</td>
+					<td>@equipment.Description</td>
+					<td>@equipment.DailyRentalCost</td>
+					<td>@equipment.AvailableQuantity</td>
+					<td>@equipment.EquipmentStatus</td>
+				</tr>
+			}
+		</tbody>
+	}
+	else if (ReportType == "ListAllCategory")
+	{
+		<thead>
+			<tr>
+				<th scope="col">Id</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (CategoryItem item in sysManagement.categoryList)
+			{
+				<tr>
+					<th scope="row">@item.CategoryID</th>
+					<td>@item.Description</td>
+				</tr>
+			}
+		</tbody>
+	}
+	else if (ReportType == "ListAllRentalInformation")
+	{
+		<thead>
+			<tr>
+				<th scope="col">Id</th>
+				<th scope="col">Date</th>
+				<th scope="col">Customer Id</th>
+				<th scope="col">Customer Last Name</th>
+				<th scope="col">Equipment Id</th>
+				<th scope="col">Equipment Name</th>
+				<th scope="col">Rental Date</th>
+				<th scope="col">Return Date</th>
+				<th scope="col">Cost</th>
+				<th scope="col">Quantity</th>
+				<th scope="col">Rental Status</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (RentalInformation information in sysManagement.rentalInformationList)
+			{
+				<tr>
+					<th scope="row">@information.RentalID</th>
+					<td>@($"{information.CurrentDate.Day}/{information.CurrentDate.Month}/{information.CurrentDate.Year}")</td>
+					<td>@information.CustomerID</td>
+					<td>@information.CustomerLastName</td>
+					<td>
+						@foreach (RentalItem rentalItem in information.rentalItemList)
+						{
+							<p>@rentalItem.EquipmentID</p>
+						}
+					</td>
+					<td>
+						@foreach (RentalItem rentalItem in information.rentalItemList)
+						{
+							string equipmentName = sysManagement.FindEquipment(rentalItem.EquipmentID).Name;
+							<p>@equipmentName</p>
+						}
+					</td>
+					<td>
+						@foreach (RentalItem rentalItem in information.rentalItemList)
+						{
+							<p>@($"{rentalItem.RentalDate.Day}/{rentalItem.RentalDate.Month}/{rentalItem.RentalDate.Year}")</p>
+						}
+					</td>
+					<td>
+						@foreach (RentalItem rentalItem in information.rentalItemList)
+						{
+							<p>@($"{rentalItem.ReturnDate.Day}/{rentalItem.ReturnDate.Month}/{rentalItem.ReturnDate.Year}")</p>
+						}
+					</td>
+					<td>
+						@foreach (RentalItem rentalItem in information.rentalItemList)
+						{
+							<p>@($"${rentalItem.CostOfRental}")</p>
+						}
+					</td>
+					<td>
+						@foreach (RentalItem rentalItem in information.rentalItemList)
+						{
+							<p>@rentalItem.Quantity</p>
+						}
+					</td>
+					<td>@information.RentalStatus</td>
+				</tr>
+				<tr>
+					<th scope="row" colspan="3">Total Rental Cost: </th>
+					<td colspan="8">$@information.TotalCostToRent</td>
+				</tr>
+			}
+		</tbody>
+	}
+</table>
+
+@code{
+	[Parameter]
+	public string ReportType { get; set; }
+}

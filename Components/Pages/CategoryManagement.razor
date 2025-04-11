@@ -1,6 +1,7 @@
 ﻿@page "/categorymanagement"
 @using VillageRental.Components.Instances
 @using VillageRental.Components.Data
+@using VillageRental.Components.Data.Exceptions
 @inject SystemManagement sysManagement
 <h1 class="text-center">Category Management</h1>
 
@@ -94,7 +95,7 @@
 			CategoryItem newCategoryItem = new CategoryItem(Convert.ToInt32(categoryID), description);
 			sysManagement.AddNewCategory(newCategoryItem);
 
-			Application.Current.MainPage.DisplayAlert("Debug", "Category Created!", "OK");
+			Application.Current.MainPage.DisplayAlert("Notification", "Category Created!", "OK");
 
 			categoryID = string.Empty;
 			description = string.Empty;
@@ -105,7 +106,7 @@
 			CategoryItem newCategoryItemData = new CategoryItem(Convert.ToInt32(categoryID), description);
 			sysManagement.UpdateCategory(currentCategory.CategoryID, newCategoryItemData);
 
-			Application.Current.MainPage.DisplayAlert("Debug", "Category Updated!", "OK");
+			Application.Current.MainPage.DisplayAlert("Notification", "Category Updated!", "OK");
 		}
 
 		sysManagement.WriteCategoryData();
@@ -116,12 +117,22 @@
 		if (currentCategory == null)
 			return;
 
-		sysManagement.RemoveCategory(currentCategory.CategoryID);
-		categoryID = string.Empty;
-		description = string.Empty;
+		try
+		{
+			sysManagement.RemoveCategory(currentCategory.CategoryID);	
+			sysManagement.WriteCategoryData();
 
-		Application.Current.MainPage.DisplayAlert("Debug", "Category Record Deleted!", "OK");
-
-		sysManagement.WriteCategoryData();
+			Application.Current.MainPage.DisplayAlert("Notification", "Category Record Deleted!", "OK");
+		}
+		catch(SystemHandler systemHandler)
+		{
+			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{systemHandler.ErrorCode}: {systemHandler.Message}", "OK");
+		}
+		finally
+		{
+			categoryID = string.Empty;
+			description = string.Empty;
+			currentCategory = null;	
+		}
 	}
 }

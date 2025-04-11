@@ -1,5 +1,6 @@
 ﻿@page "/equipmentmanagement"
 @using VillageRental.Components.Data
+@using VillageRental.Components.Data.Exceptions
 @using VillageRental.Components.Instances
 @inject SystemManagement sysManagement
 
@@ -95,7 +96,7 @@
 				</div>
 				<div class="row mt-2">
 					<div class="col">
-						<button class="btn btn-primary">Sell Equipment</button>
+						<button class="btn btn-primary" @onclick="ShowSellModal">Sell Equipment</button>
 						<button class="btn btn-primary" @onclick="RemoveFromInventory">Remove from Inventory</button>
 					</div>
 				</div>
@@ -104,8 +105,52 @@
 	</div>
 </div>
 
+@if (showModal)
+{
+	<div class="modal fade show" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: block; background: #00000080;">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3 class="modal-title fs-5" id="exampleModalLabel">Selling equipment with information</h3>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="() => showModal = false"></button>
+				</div>
+				<div class="modal-body">
+					<div class="container gap-4 text-center">
+						<div class="row">
+							<div class="col">
+								<p>Equipment ID: @equipmentID</p>
+								<p>Name: @name</p>
+								<p>Description: @description</p>
+							</div>
+						</div>
+						<div class="row mt-2">
+							<div class="col">
+								<p>Category: @equipmentCategoryText</p>
+								<p>Daily Rental Cost: @dailyRentalCost</p>
+								<p>Equipment Status: @equipmentStatus</p>
+							</div>
+						</div>
+					</div>
+					<div class="mb-3 row">
+						<label for="priceToSell" class="col-sm-3 col-form-label">Price to Sell</label>
+						<div class="col-sm-9">
+							<input type="text" class="form-control" id="priceToSell" @bind="priceToSell" />
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showModal = false">Close</button>
+					<button type="button" class="btn btn-primary" @onclick="Sell">Sell</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
 
 @code {
+	private bool showModal = false;
+
 	private string searchFilter = "EquipmentID";
 	private string searchEquipmentFieldValue = "";
 
@@ -118,6 +163,7 @@
 	private string notFoundCategoryMessage = "Category Not Found in Category List";
 
 	private string equipmentID, categoryID, name, description, dailyRentalCost, quantity, equipmentStatus;
+	private string priceToSell;
 
 	private void ClearSearchResult()
 	{
@@ -153,6 +199,8 @@
 		dailyRentalCost = currentEquipment.DailyRentalCost.ToString();
 		quantity = currentEquipment.AvailableQuantity.ToString();
 		equipmentStatus = currentEquipment.EquipmentStatus.ToString();
+
+		showModal = false;
 
 		UpdateCategoryText();
 	}
@@ -200,7 +248,7 @@
 			Equipment newEquipment = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
 			sysManagement.AddEquipmentToList(newEquipment);
 
-			Application.Current.MainPage.DisplayAlert("Debug", "Equipment Created!", "OK");
+			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Created!", "OK");
 
 			equipmentID = string.Empty;
 			categoryID = string.Empty;
@@ -216,7 +264,7 @@
 			Equipment newEquipmentData = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
 			sysManagement.UpdateEquipment(currentEquipment.EquipmentID, newEquipmentData);
 
-			Application.Current.MainPage.DisplayAlert("Debug", "Equipment Updated!", "OK");
+			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Updated!", "OK");
 		}
 
 		sysManagement.WriteEquipmentData();
@@ -244,10 +292,56 @@
 		quantity = string.Empty;
 		equipmentStatus = string.Empty;
 
-		sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
+		try
+		{
+			sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
 
-		sysManagement.WriteEquipmentData();
+			sysManagement.WriteEquipmentData();
+		}
+		catch(SystemHandler systemHandler)
+		{
+			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{systemHandler.ErrorCode}: {systemHandler.Message}", "OK");
+		}
 
 		currentEquipment = null;
+	}
+
+	private void ShowSellModal()
+	{
+		if (currentEquipment == null)
+		{
+			Application.Current.MainPage.DisplayAlert("Notification", "Haven't select any equipment to sell!", "OK");
+			return;
+		}
+
+		showModal = true;
+	}
+
+	private void Sell()
+	{
+		if(string.IsNullOrEmpty(priceToSell))
+		{
+			Application.Current.MainPage.DisplayAlert("Notification", "Please enter a price to sell", "OK");
+			return;
+		}
+
+		try
+		{
+			showModal = false;
+
+			sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
+
+			sysManagement.WriteEquipmentData();
+
+			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Sold!", "OK");
+		}
+		catch(SystemHandler systemHandler)
+		{
+			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{systemHandler.ErrorCode}: {systemHandler.Message}", "OK");
+		}
+		finally
+		{
+			ClearEquipmentInfo();
+		}
 	}
 }
