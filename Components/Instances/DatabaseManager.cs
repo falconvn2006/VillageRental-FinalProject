@@ -1,4 +1,5 @@
-﻿using VillageRental.Components.Data;
+﻿using MySqlConnector;
+using VillageRental.Components.Data;
 using VillageRental.Components.Data.Exceptions;
 
 namespace VillageRental.Components.Instances
@@ -7,148 +8,113 @@ namespace VillageRental.Components.Instances
 	{
 		public bool loadOnStart = false;
 
-		public DatabaseManager() { }
+		private MySqlConnection connection;
+
+		public DatabaseManager(string serverAddress, string username, string password, string databaseName) 
+		{ 
+			MySqlConnectionStringBuilder builder = new MySqlConnectionStringBuilder
+			{
+				Server = serverAddress,
+				UserID = username,
+				Password = password,
+				Database = databaseName,
+			};
+
+			connection = new MySqlConnection(builder.ConnectionString);
+		}
 
 		#region Load Data
 		public void LoadCategory(SystemManagement sysManagement, string _filePath)
 		{
-			using (StreamReader stream = File.OpenText(_filePath))
+			connection.Open();
+
+			MySqlCommand command = new MySqlCommand("SELECT * FROM category_item", connection);
+			MySqlDataReader reader = command.ExecuteReader();
+
+			while(reader.Read())
 			{
-				while (!stream.EndOfStream)
-				{
-					string[] content = stream.ReadLine().Trim().Split(';');
-
-					if (content.Length == 0)
-						continue;
-
-					foreach (string item in content)
-					{
-						if (string.IsNullOrWhiteSpace(item))
-							throw new SystemHandler(500, "Data is missing or one of the line in the file is empty!");
-					}
-
-					int categoryId = Convert.ToInt32(content[0]);
-					string categoryDescription = content[1];
-
-					CategoryItem categoryItem = new CategoryItem(categoryId, categoryDescription);
-					sysManagement.AddNewCategory(categoryItem);
-				}
+				CategoryItem newCategoryItem = new CategoryItem(reader.GetInt32(0), reader.GetString(1));
+				sysManagement.AddNewCategory(newCategoryItem);
 			}
+
+			connection.Close();
 		}
 
 		public void LoadCustomer(SystemManagement sysManagement, string _filePath)
 		{
-			using (StreamReader stream = File.OpenText(_filePath))
+			connection.Open();
+
+			MySqlCommand command = new MySqlCommand("SELECT * FROM customer", connection);
+			MySqlDataReader reader = command.ExecuteReader();
+
+			while (reader.Read())
 			{
-				while (!stream.EndOfStream)
-				{
-					string[] content = stream.ReadLine().Trim().Split(';');
-
-					if (content.Length == 0)
-						continue;
-
-					foreach (string item in content)
-					{
-						if (string.IsNullOrWhiteSpace(item))
-							throw new SystemHandler(500, "Data is missing or one of the line in the file is empty!");
-					}
-
-					int customerId = Convert.ToInt32(content[0]);
-					string lastName = content[1];
-					string firstName = content[2];
-					string phoneNumber = content[3];
-					string email = content[4];
-					bool isBanned = Convert.ToBoolean(content[5]);
-
-					Customer customerData = new Customer(customerId, lastName, firstName, phoneNumber, email, isBanned);
-					sysManagement.AddCustomerToList(customerData);
-				}
+				Customer newCustomerData = new Customer(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetBoolean(5));
+				sysManagement.AddCustomerToList(newCustomerData);
 			}
+
+			connection.Close();
 		}
 
 		public void LoadEquipment(SystemManagement sysManagement, string _filePath)
 		{
-			using (StreamReader stream = File.OpenText(_filePath))
+			//using (StreamReader stream = File.OpenText(_filePath))
+			//{
+			//	while (!stream.EndOfStream)
+			//	{
+			//		string[] content = stream.ReadLine().Trim().Split(';');
+
+			//		if (content.Length == 0)
+			//			continue;
+
+			//		foreach (string item in content)
+			//		{
+			//			if (string.IsNullOrWhiteSpace(item))
+			//				throw new SystemHandler(500, "Data is missing or one of the line in the file is empty!");
+			//		}
+
+			//		int equipmentId = Convert.ToInt32(content[0]);
+			//		int categoryId = Convert.ToInt32(content[1]);
+			//		string name = content[2];
+			//		string description = content[3];
+			//		double dailyRentalCost = Convert.ToDouble(content[4]);
+			//		int quantity = Convert.ToInt32(content[5]);
+			//		string status = content[6];
+
+			//		Equipment newEquipment = new Equipment(equipmentId, categoryId, name, description, dailyRentalCost, quantity, status);
+			//		sysManagement.AddEquipmentToList(newEquipment);
+			//	}
+			//}
+
+			connection.Open();
+
+			MySqlCommand command = new MySqlCommand("SELECT * FROM equipment", connection);
+			MySqlDataReader reader = command.ExecuteReader();
+
+			while (reader.Read())
 			{
-				while (!stream.EndOfStream)
-				{
-					string[] content = stream.ReadLine().Trim().Split(';');
+				int equipmentId = reader.GetInt32(0);
+				int categoryId = reader.GetInt32(1);
+				string name = reader.GetString(2);
+				string description = reader.GetString(3);
+				double dailyRentalCost = reader.GetDouble(4);
+				string equipmentStatus = reader.GetString(5);
+				int availableQuantity = reader.GetInt32(6);
 
-					if (content.Length == 0)
-						continue;
-
-					foreach (string item in content)
-					{
-						if (string.IsNullOrWhiteSpace(item))
-							throw new SystemHandler(500, "Data is missing or one of the line in the file is empty!");
-					}
-
-					int equipmentId = Convert.ToInt32(content[0]);
-					int categoryId = Convert.ToInt32(content[1]);
-					string name = content[2];
-					string description = content[3];
-					double dailyRentalCost = Convert.ToDouble(content[4]);
-					int quantity = Convert.ToInt32(content[5]);
-					string status = content[6];
-
-					Equipment newEquipment = new Equipment(equipmentId, categoryId, name, description, dailyRentalCost, quantity, status);
-					sysManagement.AddEquipmentToList(newEquipment);
-				}
+				Equipment newEquipmentData = new Equipment(equipmentId, categoryId, name, description, dailyRentalCost, availableQuantity, equipmentStatus);
+				sysManagement.AddEquipmentToList(newEquipmentData);
 			}
+
+			connection.Close();
 		}
 
 		public void LoadRentalInformation(SystemManagement sysManagement, string _filePath)
 		{
-			using (StreamReader stream = File.OpenText(_filePath))
-			{
-				while (!stream.EndOfStream)
-				{
-					string[] content = stream.ReadLine().Trim().Split(';');
+			connection.Open();
 
-					if (content.Length == 0)
-						continue;
+			MySqlCommand command = new MySqlCommand("SELECT rinfo.rental_id, rinfo.date_of_rental_creation, rinfo.customer_id, ritem.equipment_id, ritem.rental_date, ritem.return_date, ritem.quantity, ritem.cost_of_rental, rinfo.rental_status FROM rental_information rinfo JOIN rental_item ritem ON (rinfo.rental_id = ritem.rental_id);", connection);
 
-					foreach(string item in content)
-					{
-						if (string.IsNullOrWhiteSpace(item))
-							throw new SystemHandler(500, "Data is missing or one of the line in the file is empty!");
-					}
-
-					int rentalId = Convert.ToInt32(content[0]);
-					DateTime currentDate = Convert.ToDateTime(content[1]);
-					int customerId = Convert.ToInt32(content[2]);
-					int equipmentId = Convert.ToInt32(content[3]);
-					DateTime rentalDate = Convert.ToDateTime(content[4]);
-					DateTime returnDate = Convert.ToDateTime(content[5]);
-					double totalCost = Convert.ToDouble(content[6]);
-					int quantity = Convert.ToInt32(content[7]);
-					string rentalStatus = content[8];
-
-					RentalInformation rentalInformation = sysManagement.FindRentalInformation(rentalId);
-
-					if (rentalInformation == null)
-					{
-						string customerLastName = sysManagement.FindCustomer(customerId).LastName;
-						rentalInformation = new RentalInformation(rentalId, currentDate, customerId, customerLastName, rentalStatus);
-
-						double rentalCost = ((double)(returnDate - rentalDate).Days * sysManagement.FindEquipment(equipmentId).DailyRentalCost);
-						RentalItem newRentalItem = new RentalItem(equipmentId, rentalDate, returnDate, rentalCost, quantity);
-
-						rentalInformation.AddRentalItem(newRentalItem);
-					}
-					else
-					{
-						double rentalCost = ((double)(returnDate - rentalDate).Days * sysManagement.FindEquipment(equipmentId).DailyRentalCost);
-						RentalItem newRentalItem = new RentalItem(equipmentId, rentalDate, returnDate, rentalCost, quantity);
-
-						rentalInformation.AddRentalItem(newRentalItem);
-					}
-
-					sysManagement.rentalInformationList.Add(rentalInformation);
-				}
-
-				sysManagement.rentalInformationList = sysManagement.rentalInformationList.Distinct().ToList();
-			}
+			connection.Close();
 		}
 
 		#endregion

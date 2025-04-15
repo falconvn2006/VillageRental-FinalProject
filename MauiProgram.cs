@@ -18,7 +18,7 @@ namespace VillageRental
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddSingleton<SystemManagement>();
-            builder.Services.AddSingleton<DatabaseManager>();
+            builder.Services.AddSingleton((db) => new DatabaseManager("localhost", "root", "admin", "rental_test"));
 
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
