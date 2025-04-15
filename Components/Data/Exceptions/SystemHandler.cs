@@ -24,5 +24,10 @@ namespace VillageRental.Components.Data.Exceptions
 			ErrorCode = errorCode;
 			Message = message;
 		}
+
+		public void DisplayError()
+		{
+			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{ErrorCode}: {Message}", "OK");
+		}
 	}
 }

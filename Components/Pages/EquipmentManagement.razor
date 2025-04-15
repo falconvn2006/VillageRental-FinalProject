@@ -92,7 +92,7 @@
 				<div class="row">
 					<div class="col">
 						<button class="btn btn-primary" @onclick="CreateEquipment">Save</button>
-						<button class="btn btn-primary" @onclick="ClearSearchResult">Clear</button>
+						<button class="btn btn-primary" @onclick="() => { ClearSearchResult(); ClearEquipmentInfo(); }">Clear</button>
 					</div>
 				</div>
 				<div class="row mt-2">
@@ -301,7 +301,7 @@
 		}
 		catch(SystemHandler systemHandler)
 		{
-			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{systemHandler.ErrorCode}: {systemHandler.Message}", "OK");
+			systemHandler.DisplayError();
 		}
 
 		currentEquipment = null;
@@ -338,7 +338,7 @@
 		}
 		catch(SystemHandler systemHandler)
 		{
-			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{systemHandler.ErrorCode}: {systemHandler.Message}", "OK");
+			systemHandler.DisplayError();
 		}
 		finally
 		{

@@ -127,7 +127,7 @@
 		}
 		catch(SystemHandler systemHandler)
 		{
-			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{systemHandler.ErrorCode}: {systemHandler.Message}", "OK");
+			systemHandler.DisplayError();
 		}
 		finally
 		{

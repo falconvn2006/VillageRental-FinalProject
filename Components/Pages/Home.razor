@@ -22,16 +22,20 @@ Welcome to Village Rentals. Where you will manage your customer data, equipment 
 
 	protected override void OnInitialized()
 	{
+		if (dbManager.loadOnStart)
+			return;
+
 		try
 		{
 			dbManager.LoadCategory(sysManagement, DataFilePath.fileCategoryPath);
 			dbManager.LoadCustomer(sysManagement, DataFilePath.fileCustomerPath);
 			dbManager.LoadEquipment(sysManagement, DataFilePath.fileEquipmentPath);
 			dbManager.LoadRentalInformation(sysManagement, DataFilePath.fileRentalInformationPath);
+			dbManager.loadOnStart = true;
 		}
 		catch (SystemHandler systemHandler)
 		{
-			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{systemHandler.ErrorCode}: {systemHandler.Message}", "OK");
+			systemHandler.DisplayError();
 		}
 	}
 }

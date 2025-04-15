@@ -139,6 +139,12 @@
 		if (string.IsNullOrEmpty(rentalID) || string.IsNullOrEmpty(customerID) || string.IsNullOrEmpty(currentDate) || string.IsNullOrEmpty(rentalStatus))
 			return;
 
+		if(sysManagement.FindCustomer(Convert.ToInt32(customerID)) == null)
+		{
+			Application.Current.MainPage.DisplayAlert("Notification", "Invalid customer id", "OK");
+			return;
+		}
+
 		currentRentalInformation = new RentalInformation(Convert.ToInt32(rentalID), Convert.ToDateTime(currentDate), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
 		foreach(RentalItem item in currentRentalItemList)
 		{

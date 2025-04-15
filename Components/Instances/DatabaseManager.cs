@@ -5,6 +5,8 @@ namespace VillageRental.Components.Instances
 {
 	class DatabaseManager
 	{
+		public bool loadOnStart = false;
+
 		public DatabaseManager() { }
 
 		#region Load Data

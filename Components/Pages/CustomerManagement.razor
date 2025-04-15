@@ -68,7 +68,7 @@
 			<div class="mb-3 row">
 				<label for="email" class="col-sm-3 col-form-label">Email</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="email" @bind="email" />
+					<input type="email" class="form-control" id="email" @bind="email" />
 				</div>
 			</div>
 			<div class="form-check form-check-reverse">
@@ -168,6 +168,8 @@
 
 		sysManagement.BanCustomer(currentCustomer.CustomerID);
 		SetCurrentCustomer(currentCustomer);
+
+
 	}
 
 	private void CreateCustomer()
@@ -217,7 +219,7 @@
 		}
 		catch(SystemHandler systemHandler)
 		{
-			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{systemHandler.ErrorCode}: {systemHandler.Message}", "OK");
+			systemHandler.DisplayError();
 		}
 		finally
 		{
