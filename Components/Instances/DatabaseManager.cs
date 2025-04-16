@@ -7,34 +7,53 @@ namespace VillageRental.Components.Instances
 	class DatabaseManager
 	{
 		public bool loadOnStart = false;
+		private bool connected = false;
 
 		private MySqlConnection connection;
 
-		public DatabaseManager(string serverAddress, string username, string password, string databaseName) 
+		public DatabaseManager(string serverAddress = "", string username = "", string password = "", string databaseName = "") 
 		{ 
 			MySqlConnectionStringBuilder builder = new MySqlConnectionStringBuilder
 			{
-				Server = serverAddress,
-				UserID = username,
-				Password = password,
-				Database = databaseName,
+				Server = string.IsNullOrEmpty(serverAddress) ? "localhost" : serverAddress,
+				UserID = string.IsNullOrEmpty(username) ? "root" : username,
+				Password = string.IsNullOrEmpty(password) ? "admin123" : password,
+				Database = string.IsNullOrEmpty(databaseName) ? "village_rentals" : databaseName,
 			};
 
 			connection = new MySqlConnection(builder.ConnectionString);
+
+			try
+			{
+				connection.Open();
+
+				connected = true;
+
+				connection.Close();
+			}
+			catch (Exception ex)
+			{
+				SystemHandler systemHandler = new SystemHandler(900, "Cannot connect to database. The program will not load data and save data!");
+				systemHandler.DisplayError();
+			}
 		}
 
 		#region Load Data
 		public void LoadCategory(SystemManagement sysManagement, string _filePath)
 		{
+			if (!connected)
+				return;
+
 			connection.Open();
 
 			MySqlCommand command = new MySqlCommand("SELECT * FROM category_item", connection);
-			MySqlDataReader reader = command.ExecuteReader();
-
-			while(reader.Read())
+			using (MySqlDataReader reader = command.ExecuteReader())
 			{
-				CategoryItem newCategoryItem = new CategoryItem(reader.GetInt32(0), reader.GetString(1));
-				sysManagement.AddNewCategory(newCategoryItem);
+				while (reader.Read())
+				{
+					CategoryItem newCategoryItem = new CategoryItem(reader.GetInt32(0), reader.GetString(1));
+					sysManagement.AddNewCategory(newCategoryItem);
+				}
 			}
 
 			connection.Close();
@@ -42,15 +61,19 @@ namespace VillageRental.Components.Instances
 
 		public void LoadCustomer(SystemManagement sysManagement, string _filePath)
 		{
+			if (!connected)
+				return;
+
 			connection.Open();
 
 			MySqlCommand command = new MySqlCommand("SELECT * FROM customer", connection);
-			MySqlDataReader reader = command.ExecuteReader();
-
-			while (reader.Read())
+			using (MySqlDataReader reader = command.ExecuteReader())
 			{
-				Customer newCustomerData = new Customer(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetBoolean(5));
-				sysManagement.AddCustomerToList(newCustomerData);
+				while (reader.Read())
+				{
+					Customer newCustomerData = new Customer(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetBoolean(5));
+					sysManagement.AddCustomerToList(newCustomerData);
+				}
 			}
 
 			connection.Close();
@@ -58,6 +81,9 @@ namespace VillageRental.Components.Instances
 
 		public void LoadEquipment(SystemManagement sysManagement, string _filePath)
 		{
+			if (!connected)
+				return;
+
 			//using (StreamReader stream = File.OpenText(_filePath))
 			//{
 			//	while (!stream.EndOfStream)
@@ -89,20 +115,21 @@ namespace VillageRental.Components.Instances
 			connection.Open();
 
 			MySqlCommand command = new MySqlCommand("SELECT * FROM equipment", connection);
-			MySqlDataReader reader = command.ExecuteReader();
-
-			while (reader.Read())
+			using(MySqlDataReader reader = command.ExecuteReader())
 			{
-				int equipmentId = reader.GetInt32(0);
-				int categoryId = reader.GetInt32(1);
-				string name = reader.GetString(2);
-				string description = reader.GetString(3);
-				double dailyRentalCost = reader.GetDouble(4);
-				string equipmentStatus = reader.GetString(5);
-				int availableQuantity = reader.GetInt32(6);
+				while (reader.Read())
+				{
+					int equipmentId = reader.GetInt32(0);
+					int categoryId = reader.GetInt32(1);
+					string name = reader.GetString(2);
+					string description = reader.GetString(3);
+					double dailyRentalCost = reader.GetDouble(4);
+					string equipmentStatus = reader.GetString(5);
+					int availableQuantity = reader.GetInt32(6);
 
-				Equipment newEquipmentData = new Equipment(equipmentId, categoryId, name, description, dailyRentalCost, availableQuantity, equipmentStatus);
-				sysManagement.AddEquipmentToList(newEquipmentData);
+					Equipment newEquipmentData = new Equipment(equipmentId, categoryId, name, description, dailyRentalCost, availableQuantity, equipmentStatus);
+					sysManagement.AddEquipmentToList(newEquipmentData);
+				}
 			}
 
 			connection.Close();
@@ -110,10 +137,46 @@ namespace VillageRental.Components.Instances
 
 		public void LoadRentalInformation(SystemManagement sysManagement, string _filePath)
 		{
+			if (!connected)
+				return;
+
 			connection.Open();
 
-			MySqlCommand command = new MySqlCommand("SELECT rinfo.rental_id, rinfo.date_of_rental_creation, rinfo.customer_id, ritem.equipment_id, ritem.rental_date, ritem.return_date, ritem.quantity, ritem.cost_of_rental, rinfo.rental_status FROM rental_information rinfo JOIN rental_item ritem ON (rinfo.rental_id = ritem.rental_id);", connection);
+			MySqlCommand command = new MySqlCommand("SELECT * FROM rental_information;", connection);
+			using (MySqlDataReader reader = command.ExecuteReader())
+			{
+				while (reader.Read())
+				{
+					int rentalId = reader.GetInt32(0);
+					DateTime dateOfRentalCreation = reader.GetDateTime(1);
+					int customerId = reader.GetInt32(2);
+					string rentalStatus = reader.GetString(3);
 
+					RentalInformation newRentalInformationData = new RentalInformation(rentalId, dateOfRentalCreation, customerId, sysManagement.FindCustomer(customerId).LastName, rentalStatus);
+
+					sysManagement.RentItem(newRentalInformationData);
+				}
+			}
+
+			foreach (RentalInformation information in sysManagement.rentalInformationList)
+			{
+				MySqlCommand rentalItemCommand = new MySqlCommand($"SELECT * FROM rental_item WHERE rental_id = {information.RentalID}", connection);
+				using (MySqlDataReader reader = rentalItemCommand.ExecuteReader())
+				{
+					while (reader.Read())
+					{
+						int equipmentId = reader.GetInt32(1);
+						DateTime rentalDate = reader.GetDateTime(2);
+						DateTime returnDate = reader.GetDateTime(3);
+						int quantity = reader.GetInt32(4);
+						double costOfRental = reader.GetDouble(5);
+
+
+						RentalItem newRentalItemData = new RentalItem(equipmentId, rentalDate, returnDate, costOfRental, quantity);
+						information.AddRentalItem(newRentalItemData);
+					}
+				}
+			}
 			connection.Close();
 		}
 
@@ -123,18 +186,25 @@ namespace VillageRental.Components.Instances
 
 		public void WriteCategoryData(SystemManagement sysManagement)
 		{
-			using (StreamWriter stream = File.CreateText(DataFilePath.fileCategoryPath))
+			if (!connected)
+				return;
+
+			connection.Open();
+
+			foreach(CategoryItem item in sysManagement.categoryList)
 			{
-				foreach (CategoryItem item in sysManagement.categoryList)
-				{
-					string content = item.ToString();
-					stream.WriteLine(content);
-				}
+				MySqlCommand command = new MySqlCommand($"INSERT INTO category_item VALUES ({item.CategoryID}, '{item.Description}') ON DUPLICATE KEY UPDATE description='{item.Description}';", connection);
+				command.ExecuteNonQuery();
 			}
+
+			connection.Close();
 		}
 
 		public void WriteCustomerData(SystemManagement sysManagement)
 		{
+			if (!connected)
+				return;
+
 			using (StreamWriter stream = File.CreateText(DataFilePath.fileCustomerPath))
 			{
 				foreach (Customer customer in sysManagement.customerList)
@@ -147,6 +217,9 @@ namespace VillageRental.Components.Instances
 
 		public void WriteEquipmentData(SystemManagement sysManagement)
 		{
+			if (!connected)
+				return;
+
 			using (StreamWriter stream = File.CreateText(DataFilePath.fileEquipmentPath))
 			{
 				foreach (Equipment equipment in sysManagement.equipmentList)
@@ -159,6 +232,9 @@ namespace VillageRental.Components.Instances
 
 		public void WriteRentalInformationData(SystemManagement sysManagement)
 		{
+			if (!connected)
+				return;
+
 			using (StreamWriter stream = File.CreateText(DataFilePath.fileRentalInformationPath))
 			{
 				foreach (RentalInformation information in sysManagement.rentalInformationList)

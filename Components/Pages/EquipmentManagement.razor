@@ -43,9 +43,18 @@
 		<div>
 			<div class="mb-3 row">
 				<label for="equipmentID" class="col-sm-3 col-form-label">Equipment ID</label>
-				<div class="col-sm-9">
-					<input type="text" class="form-control" id="equipmentID" @bind="equipmentID" />
-				</div>
+				@if(currentEquipment == null)
+				{
+					<div class="col-sm-9">
+						<input type="text" class="form-control" id="equipmentID" @bind="equipmentID" />
+					</div>
+				}
+				else
+				{
+					<div class="col-sm-9">
+						<input type="text" class="form-control" id="equipmentID" @bind="equipmentID" disabled />
+					</div>
+				}
 			</div>
 			<div class="mb-3 row">
 				<label for="categoryID" class="col-sm-3 col-form-label">Category ID</label>

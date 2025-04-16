@@ -29,7 +29,6 @@ namespace VillageRental.Components.Data
 
         public void UpdateEquipment(Equipment _equipment)
         {
-            EquipmentID = _equipment.EquipmentID;
 			CategoryID = _equipment.CategoryID;
 			Name = _equipment.Name;
 			Description = _equipment.Description;

@@ -256,7 +256,6 @@ namespace VillageRental.Components.Instances
         public void UpdateCategory(int _categoryID, CategoryItem _newCategoryData)
         {
             CategoryItem categoryToChange = FindCategory(_categoryID);
-            categoryToChange.CategoryID = _newCategoryData.CategoryID;
             categoryToChange.Description = _newCategoryData.Description;
         }
 

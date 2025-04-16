@@ -43,9 +43,18 @@
 		<div>
 			<div class="mb-3 row">
 				<label for="customerID" class="col-sm-3 col-form-label">Customer ID</label>
-				<div class="col-sm-9">
-					<input type="text" class="form-control" id="customerID" @bind="customerID" />
-				</div>
+				@if(currentCustomer == null)
+				{
+					<div class="col-sm-9">
+						<input type="text" class="form-control" id="customerID" @bind="customerID" />
+					</div>
+				}
+				else
+				{
+					<div class="col-sm-9">
+						<input type="text" class="form-control" id="customerID" @bind="customerID" disabled />
+					</div>
+				}
 			</div>
 			<div class="mb-3 row">
 				<label for="firstName" class="col-sm-3 col-form-label">First Name</label>
