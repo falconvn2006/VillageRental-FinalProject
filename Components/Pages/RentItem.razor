@@ -1,6 +1,7 @@
 ﻿@page "/rentitem"
 @using VillageRental.Components.Data
 @using VillageRental.Components.Instances
+@using System.Text.RegularExpressions
 @inject SystemManagement sysManagement
 @inject DatabaseManager dbManager
 
@@ -134,10 +135,18 @@
 
 	private string equipmentID, rentalDate, returnDate, quantity, costOfRental;
 
+	private Regex regexDate = new Regex(@"^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$");
+
 	private void Rent()
 	{
 		if (string.IsNullOrEmpty(rentalID) || string.IsNullOrEmpty(customerID) || string.IsNullOrEmpty(currentDate) || string.IsNullOrEmpty(rentalStatus))
 			return;
+
+		if(!regexDate.IsMatch(currentDate))
+		{
+			Application.Current.MainPage.DisplayAlert("Error encounter!", "Invalid date format (dd/mm/yyyy)", "OK");
+			return;
+		}
 
 		if(sysManagement.FindCustomer(Convert.ToInt32(customerID)) == null)
 		{
@@ -153,7 +162,7 @@
 
 		sysManagement.RentItem(currentRentalInformation);
 
-		
+
 		Application.Current.MainPage.DisplayAlert("Notification", "Rental Information Created!", "OK");
 
 		dbManager.WriteRentalInformationData(sysManagement);
@@ -171,6 +180,18 @@
 			return;
 		}
 
+		if (!regexDate.IsMatch(rentalDate))
+		{
+			Application.Current.MainPage.DisplayAlert("Error encounter!", "Invalid rental date format (dd/mm/yyyy)", "OK");
+			return;
+		}
+
+		if (!regexDate.IsMatch(returnDate))
+		{
+			Application.Current.MainPage.DisplayAlert("Error encounter!", "Invalid return date format (dd/mm/yyyy)", "OK");
+			return;
+		}
+
 		if (sysManagement.FindEquipment(Convert.ToInt32(equipmentID)) == null)
 		{
 			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Not Found", "OK");
@@ -183,8 +204,27 @@
 			return;
 		}
 
+		if (sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).AvailableQuantity <= 0)
+		{
+			Application.Current.MainPage.DisplayAlert("Notification", "This equipment doesn't have the available amount anymore", "OK");
+			return;
+		}
+
 		RentalItem newRentalItem = new RentalItem(Convert.ToInt32(equipmentID), Convert.ToDateTime(rentalDate), Convert.ToDateTime(returnDate), Convert.ToDouble(costOfRental), Convert.ToInt32(quantity));
 		currentRentalItemList.Add(newRentalItem);
+
+		Equipment updatedEquipmentData = new Equipment(
+			Convert.ToInt32(equipmentID),
+			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).CategoryID,
+			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).Name,
+			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).Description,
+			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).DailyRentalCost,
+			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).AvailableQuantity - Convert.ToInt32(quantity),
+			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).EquipmentStatus
+		);
+		sysManagement.UpdateEquipment(Convert.ToInt32(equipmentID), updatedEquipmentData);
+
+		dbManager.WriteEquipmentData(sysManagement);
 
 		Application.Current.MainPage.DisplayAlert("Notification", "Rental Item Added!", "OK");
 

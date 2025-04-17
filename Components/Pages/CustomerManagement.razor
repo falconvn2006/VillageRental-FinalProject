@@ -1,4 +1,5 @@
 ﻿@page "/customermanagement"
+@using System.Text.RegularExpressions
 @using VillageRental.Components.Instances
 @using VillageRental.Components.Data
 @using VillageRental.Components.Data.Exceptions
@@ -189,29 +190,42 @@
 			return;
 		}
 
-		if(currentCustomer == null)
+		try
 		{
-			Customer newCustomer = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
-			sysManagement.AddCustomerToList(newCustomer);
+			if (currentCustomer == null)
+			{
+				Customer newCustomer = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
 
-			Application.Current.MainPage.DisplayAlert("Notification", "Customer Created!", "OK");
+				sysManagement.AddCustomerToList(newCustomer);
 
-			customerID = string.Empty;
-			firstName = string.Empty;
-			lastName = string.Empty;
-			phoneNumber = string.Empty;
-			email = string.Empty;
-			currentCustomer = null;
+				Application.Current.MainPage.DisplayAlert("Notification", "Customer Created!", "OK");
+
+				customerID = string.Empty;
+				firstName = string.Empty;
+				lastName = string.Empty;
+				phoneNumber = string.Empty;
+				email = string.Empty;
+				currentCustomer = null;
+			}
+			else
+			{
+				Customer newCustomerData = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
+				sysManagement.UpdateCustomer(currentCustomer.CustomerID, newCustomerData);
+
+				Application.Current.MainPage.DisplayAlert("Notification", "Customer Updated!", "OK");
+			}
+
+			dbManager.WriteCustomerData(sysManagement);
 		}
-		else
+		catch(SystemHandler handler)
 		{
-			Customer newCustomerData = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
-			sysManagement.UpdateCustomer(currentCustomer.CustomerID, newCustomerData);
-
-			Application.Current.MainPage.DisplayAlert("Notification", "Customer Updated!", "OK");
+			handler.DisplayError();
 		}
-
-		dbManager.WriteCustomerData(sysManagement);
+		catch(Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
+		}
 	}
 
 	private void DeleteCustomerRecord()

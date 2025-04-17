@@ -24,15 +24,20 @@ Welcome to Village Rentals. Where you will manage your customer data, equipment 
 
 		try
 		{
-			dbManager.LoadCategory(sysManagement, DataFilePath.fileCategoryPath);
-			dbManager.LoadCustomer(sysManagement, DataFilePath.fileCustomerPath);
-			dbManager.LoadEquipment(sysManagement, DataFilePath.fileEquipmentPath);
-			dbManager.LoadRentalInformation(sysManagement, DataFilePath.fileRentalInformationPath);
+			dbManager.LoadCategory(sysManagement);
+			dbManager.LoadCustomer(sysManagement);
+			dbManager.LoadEquipment(sysManagement);
+			dbManager.LoadRentalInformation(sysManagement);
 			dbManager.loadOnStart = true;
 		}
 		catch (SystemHandler systemHandler)
 		{
 			systemHandler.DisplayError();
+		}
+		catch(Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
 		}
 	}
 }

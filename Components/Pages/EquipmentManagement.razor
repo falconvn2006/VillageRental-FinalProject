@@ -253,31 +253,43 @@
 			return;
 		}	
 
-		if(currentEquipment == null)
+		try
 		{
-			Equipment newEquipment = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
-			sysManagement.AddEquipmentToList(newEquipment);
+			if (currentEquipment == null)
+			{
+				Equipment newEquipment = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
+				sysManagement.AddEquipmentToList(newEquipment);
 
-			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Created!", "OK");
+				Application.Current.MainPage.DisplayAlert("Notification", "Equipment Created!", "OK");
 
-			equipmentID = string.Empty;
-			categoryID = string.Empty;
-			name = string.Empty;
-			description = string.Empty;
-			dailyRentalCost = string.Empty;
-			quantity = string.Empty;
-			equipmentStatus = string.Empty;
-			currentEquipment = null;
+				equipmentID = string.Empty;
+				categoryID = string.Empty;
+				name = string.Empty;
+				description = string.Empty;
+				dailyRentalCost = string.Empty;
+				quantity = string.Empty;
+				equipmentStatus = string.Empty;
+				currentEquipment = null;
+			}
+			else
+			{
+				Equipment newEquipmentData = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
+				sysManagement.UpdateEquipment(currentEquipment.EquipmentID, newEquipmentData);
+
+				Application.Current.MainPage.DisplayAlert("Notification", "Equipment Updated!", "OK");
+			}
+
+			dbManager.WriteEquipmentData(sysManagement);
 		}
-		else
+		catch(SystemHandler handler)
 		{
-			Equipment newEquipmentData = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
-			sysManagement.UpdateEquipment(currentEquipment.EquipmentID, newEquipmentData);
-
-			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Updated!", "OK");
+			handler.DisplayError();
 		}
-
-		dbManager.WriteEquipmentData(sysManagement);
+		catch(Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
+		}
 	}
 
 	private void ClearEquipmentInfo()

@@ -3,27 +3,8 @@ using VillageRental.Components.Data.Exceptions;
 
 namespace VillageRental.Components.Instances
 {
-    public static class ExampleData
-    {
-		public static string CategoryContent = "10;Power tools\r\n20;Yard equipment\r\n30;Compressors\r\n40;Generators\r\n50;Air Tools";
-        public static string RentalInformationContent = "1000;15/02/2024;1001;201;20/02/2024;23/02/2024;149,97;1;Renting\r\n1001;16/02/2024;1002;501;21/02/2024;25/02/2024;43,96;1;Renting";
-        public static string CustomerContent = "1001;Doe;John;(555) 555-1212;jd@sample.net;False\r\n1002;Smith;Jane;(555) 555-3434;js@live.com;False\r\n1003;Lee;Michael;(555) 555-5656;ml@sample.net;False";
-        public static string EquipmentContent = "101;10;Hammer drill;Powerful drill for concrete and masonry;25,99;1;Good\r\n201;20;Chainsaw;Gas-powered chainsaw for cutting wood;49,99;1;Good\r\n202;20;Lawn mower;Self-propelled lawn mower with mulching function;19,99;1;Good\r\n301;30;Small Compressor;5 Gallon Compressor-Portable;14,99;1;Good\r\n501;50;Brad Nailer;Brad Nailer. Requires 3/4 to 1 1/2 Brad Nails;10,99;1;Good";
-    }
-
-    public static class DataFilePath
-    {
-		public static string fileCategoryPath = FileSystem.Current.AppDataDirectory + "\\category.txt";
-		public static string fileRentalInformationPath = FileSystem.Current.AppDataDirectory + "\\rental_information.txt";
-		public static string fileCustomerPath = FileSystem.Current.AppDataDirectory + "\\customer.txt";
-		public static string fileEquipmentPath = FileSystem.Current.AppDataDirectory + "\\equipment.txt";
-	}
-
-
     public class SystemManagement
     {
-        public bool writeExampleDataIfNotExits = true;
-
         public List<Customer> customerList;
         public List<Equipment> equipmentList;
         public List<CategoryItem> categoryList;
@@ -35,15 +16,15 @@ namespace VillageRental.Components.Instances
             equipmentList = new List<Equipment>();
             categoryList = new List<CategoryItem>();
             rentalInformationList = new List<RentalInformation>();
-
-            if(writeExampleDataIfNotExits)
-                WriteExampleData(false);
         }
 
 
         #region Customer Management Functions
         public void AddCustomerToList(Customer _customer)
         {
+            if (FindCustomer(_customer.CustomerID) != null)
+                throw new SystemHandler("Customer with that ID already exists!");
+
             customerList.Add(_customer);
         }
 
@@ -143,6 +124,12 @@ namespace VillageRental.Components.Instances
 
         public void AddEquipmentToList(Equipment _equipment)
         {
+            if (FindEquipment(_equipment.EquipmentID) != null)
+                throw new SystemHandler("Equipment with that ID already exists!");
+
+            if (FindCategory(_equipment.CategoryID) == null)
+                throw new SystemHandler("Cannot add equipment with a non existing category to list!");
+
             equipmentList.Add(_equipment);
         }
 
@@ -227,6 +214,9 @@ namespace VillageRental.Components.Instances
 
         public void AddNewCategory(CategoryItem _newCategoryItem)
         {
+            if (FindCategory(_newCategoryItem.CategoryID) != null)
+                throw new SystemHandler("Category with that ID already exists!");
+
             categoryList.Add(_newCategoryItem);
         }
 
@@ -288,24 +278,5 @@ namespace VillageRental.Components.Instances
 
             return null;
         }
-
-        private void WriteExampleData(bool overwriteOnStart)
-        {
-            if(!File.Exists(DataFilePath.fileCategoryPath) || overwriteOnStart)
-		        using (StreamWriter stream = File.CreateText(DataFilePath.fileCategoryPath))
-                    stream.Write(ExampleData.CategoryContent);
-
-            if(!File.Exists(DataFilePath.fileCustomerPath) || overwriteOnStart)
-			    using (StreamWriter stream = File.CreateText(DataFilePath.fileCustomerPath))
-				    stream.Write(ExampleData.CustomerContent);
-
-            if(!File.Exists(DataFilePath.fileEquipmentPath) || overwriteOnStart)
-		        using (StreamWriter stream = File.CreateText(DataFilePath.fileEquipmentPath))
-			        stream.Write(ExampleData.EquipmentContent);
-
-            if(!File.Exists(DataFilePath.fileRentalInformationPath) || overwriteOnStart)
-				using (StreamWriter stream = File.CreateText(DataFilePath.fileRentalInformationPath))
-					stream.Write(ExampleData.RentalInformationContent);
-		}
 	}
 }

@@ -100,26 +100,39 @@
 			return;
 		}
 
-		if (currentCategory == null)
+		try
 		{
-			CategoryItem newCategoryItem = new CategoryItem(Convert.ToInt32(categoryID), description);
-			sysManagement.AddNewCategory(newCategoryItem);
+			if (currentCategory == null)
+			{
+				CategoryItem newCategoryItem = new CategoryItem(Convert.ToInt32(categoryID), description);
+				sysManagement.AddNewCategory(newCategoryItem);
 
-			Application.Current.MainPage.DisplayAlert("Notification", "Category Created!", "OK");
+				Application.Current.MainPage.DisplayAlert("Notification", "Category Created!", "OK");
 
-			categoryID = string.Empty;
-			description = string.Empty;
-			currentCategory = null;
+				categoryID = string.Empty;
+				description = string.Empty;
+				currentCategory = null;
+			}
+			else
+			{
+				CategoryItem newCategoryItemData = new CategoryItem(Convert.ToInt32(categoryID), description);
+				sysManagement.UpdateCategory(currentCategory.CategoryID, newCategoryItemData);
+
+				Application.Current.MainPage.DisplayAlert("Notification", "Category Updated!", "OK");
+			}
+
+			dbManager.WriteCategoryData(sysManagement);
 		}
-		else
+		catch(SystemHandler handler)
 		{
-			CategoryItem newCategoryItemData = new CategoryItem(Convert.ToInt32(categoryID), description);
-			sysManagement.UpdateCategory(currentCategory.CategoryID, newCategoryItemData);
-
-			Application.Current.MainPage.DisplayAlert("Notification", "Category Updated!", "OK");
+			handler.DisplayError();
 		}
+		catch(Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
 
-		dbManager.WriteCategoryData(sysManagement);
+			handler.DisplayError();
+		}
 	}
 
 	private void DeleteCategoryRecord()

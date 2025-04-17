@@ -1,4 +1,5 @@
 ﻿using MySqlConnector;
+using System.Globalization;
 using VillageRental.Components.Data;
 using VillageRental.Components.Data.Exceptions;
 
@@ -11,8 +12,12 @@ namespace VillageRental.Components.Instances
 
 		private MySqlConnection connection;
 
+		NumberFormatInfo nfi = new NumberFormatInfo();
+
 		public DatabaseManager(string serverAddress = "", string username = "", string password = "", string databaseName = "") 
-		{ 
+		{
+			nfi.NumberDecimalSeparator = ".";
+
 			MySqlConnectionStringBuilder builder = new MySqlConnectionStringBuilder
 			{
 				Server = string.IsNullOrEmpty(serverAddress) ? "localhost" : serverAddress,
@@ -39,10 +44,13 @@ namespace VillageRental.Components.Instances
 		}
 
 		#region Load Data
-		public void LoadCategory(SystemManagement sysManagement, string _filePath)
+		public void LoadCategory(SystemManagement sysManagement)
 		{
 			if (!connected)
 				return;
+
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
 
 			connection.Open();
 
@@ -59,10 +67,13 @@ namespace VillageRental.Components.Instances
 			connection.Close();
 		}
 
-		public void LoadCustomer(SystemManagement sysManagement, string _filePath)
+		public void LoadCustomer(SystemManagement sysManagement)
 		{
 			if (!connected)
 				return;
+
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
 
 			connection.Open();
 
@@ -79,38 +90,13 @@ namespace VillageRental.Components.Instances
 			connection.Close();
 		}
 
-		public void LoadEquipment(SystemManagement sysManagement, string _filePath)
+		public void LoadEquipment(SystemManagement sysManagement)
 		{
 			if (!connected)
 				return;
 
-			//using (StreamReader stream = File.OpenText(_filePath))
-			//{
-			//	while (!stream.EndOfStream)
-			//	{
-			//		string[] content = stream.ReadLine().Trim().Split(';');
-
-			//		if (content.Length == 0)
-			//			continue;
-
-			//		foreach (string item in content)
-			//		{
-			//			if (string.IsNullOrWhiteSpace(item))
-			//				throw new SystemHandler(500, "Data is missing or one of the line in the file is empty!");
-			//		}
-
-			//		int equipmentId = Convert.ToInt32(content[0]);
-			//		int categoryId = Convert.ToInt32(content[1]);
-			//		string name = content[2];
-			//		string description = content[3];
-			//		double dailyRentalCost = Convert.ToDouble(content[4]);
-			//		int quantity = Convert.ToInt32(content[5]);
-			//		string status = content[6];
-
-			//		Equipment newEquipment = new Equipment(equipmentId, categoryId, name, description, dailyRentalCost, quantity, status);
-			//		sysManagement.AddEquipmentToList(newEquipment);
-			//	}
-			//}
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
 
 			connection.Open();
 
@@ -135,10 +121,13 @@ namespace VillageRental.Components.Instances
 			connection.Close();
 		}
 
-		public void LoadRentalInformation(SystemManagement sysManagement, string _filePath)
+		public void LoadRentalInformation(SystemManagement sysManagement)
 		{
 			if (!connected)
 				return;
+
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
 
 			connection.Open();
 
@@ -189,6 +178,9 @@ namespace VillageRental.Components.Instances
 			if (!connected)
 				return;
 
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
+
 			connection.Open();
 
 			foreach(CategoryItem item in sysManagement.categoryList)
@@ -205,14 +197,18 @@ namespace VillageRental.Components.Instances
 			if (!connected)
 				return;
 
-			using (StreamWriter stream = File.CreateText(DataFilePath.fileCustomerPath))
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
+
+			connection.Open();
+
+			foreach(Customer customer in sysManagement.customerList)
 			{
-				foreach (Customer customer in sysManagement.customerList)
-				{
-					string content = customer.ToString();
-					stream.WriteLine(content);
-				}
+				MySqlCommand command = new MySqlCommand($"INSERT INTO customer VALUES ({customer.CustomerID}, '{customer.LastName}', '{customer.FirstName}', '{customer.PhoneNumber}', '{customer.Email}', {(customer.isBanned ? 1 : 0)}) ON DUPLICATE KEY UPDATE last_name='{customer.LastName}', first_name='{customer.FirstName}', phone_number='{customer.PhoneNumber}', email='{customer.Email}', is_banned={(customer.isBanned ? 1 : 0)};", connection);
+				command.ExecuteNonQuery();
 			}
+
+			connection.Close();
 		}
 
 		public void WriteEquipmentData(SystemManagement sysManagement)
@@ -220,14 +216,19 @@ namespace VillageRental.Components.Instances
 			if (!connected)
 				return;
 
-			using (StreamWriter stream = File.CreateText(DataFilePath.fileEquipmentPath))
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
+
+			connection.Open();
+
+			foreach (Equipment equipment in sysManagement.equipmentList)
 			{
-				foreach (Equipment equipment in sysManagement.equipmentList)
-				{
-					string content = equipment.ToString();
-					stream.WriteLine(content);
-				}
+				//Debug.WriteLine($"INSERT INTO equipment VALUES ({equipment.EquipmentID}, {equipment.CategoryID}, '{equipment.Name}', '{equipment.Description}', {equipment.DailyRentalCost}, '{equipment.EquipmentStatus}', {equipment.AvailableQuantity}) ON DUPLICATE KEY UPDATE category_id={equipment.CategoryID}, name='{equipment.Name}', description='{equipment.Description}', daily_rental_cost={equipment.DailyRentalCost}, equipment_status='{equipment.EquipmentStatus}', available_quantity={equipment.AvailableQuantity};");
+				MySqlCommand command = new MySqlCommand($"INSERT INTO equipment VALUES ({equipment.EquipmentID}, {equipment.CategoryID}, '{equipment.Name}', '{equipment.Description}', {equipment.DailyRentalCost.ToString(nfi)}, '{equipment.EquipmentStatus}', {equipment.AvailableQuantity}) ON DUPLICATE KEY UPDATE category_id={equipment.CategoryID}, name='{equipment.Name}', description='{equipment.Description}', daily_rental_cost={equipment.DailyRentalCost.ToString(nfi)}, equipment_status='{equipment.EquipmentStatus}', available_quantity={equipment.AvailableQuantity};", connection);
+				command.ExecuteNonQuery();
 			}
+
+			connection.Close();
 		}
 
 		public void WriteRentalInformationData(SystemManagement sysManagement)
@@ -235,24 +236,24 @@ namespace VillageRental.Components.Instances
 			if (!connected)
 				return;
 
-			using (StreamWriter stream = File.CreateText(DataFilePath.fileRentalInformationPath))
-			{
-				foreach (RentalInformation information in sysManagement.rentalInformationList)
-				{
-					string currentDate = $"{information.CurrentDate.Day}/{information.CurrentDate.Month}/{information.CurrentDate.Year}";
-					string content = $"{information.RentalID};{currentDate};{information.CustomerID};";
-					foreach (RentalItem item in information.rentalItemList)
-					{
-						string copyContent = content.Clone().ToString();
-						string rentalDate = $"{item.RentalDate.Day}/{item.RentalDate.Month}/{item.RentalDate.Year}";
-						string returnDate = $"{item.ReturnDate.Day}/{item.ReturnDate.Month}/{item.ReturnDate.Year}";
-						copyContent += $"{item.EquipmentID};{rentalDate};{returnDate};{item.CostOfRental};";
-						copyContent += $"{item.Quantity};{information.RentalStatus}";
+			//using (StreamWriter stream = File.CreateText(DataFilePath.fileRentalInformationPath))
+			//{
+			//	foreach (RentalInformation information in sysManagement.rentalInformationList)
+			//	{
+			//		string currentDate = $"{information.CurrentDate.Day}/{information.CurrentDate.Month}/{information.CurrentDate.Year}";
+			//		string content = $"{information.RentalID};{currentDate};{information.CustomerID};";
+			//		foreach (RentalItem item in information.rentalItemList)
+			//		{
+			//			string copyContent = content.Clone().ToString();
+			//			string rentalDate = $"{item.RentalDate.Day}/{item.RentalDate.Month}/{item.RentalDate.Year}";
+			//			string returnDate = $"{item.ReturnDate.Day}/{item.ReturnDate.Month}/{item.ReturnDate.Year}";
+			//			copyContent += $"{item.EquipmentID};{rentalDate};{returnDate};{item.CostOfRental};";
+			//			copyContent += $"{item.Quantity};{information.RentalStatus}";
 
-						stream.WriteLine(copyContent);
-					}
-				}
-			}
+			//			stream.WriteLine(copyContent);
+			//		}
+			//	}
+			//}
 		}
 		#endregion
 	}
