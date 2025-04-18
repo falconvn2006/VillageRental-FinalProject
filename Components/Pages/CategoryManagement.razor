@@ -142,8 +142,8 @@
 
 		try
 		{
-			sysManagement.RemoveCategory(currentCategory.CategoryID);	
-			dbManager.WriteCategoryData(sysManagement);
+			sysManagement.RemoveCategory(currentCategory.CategoryID);
+			dbManager.DeleteCategory(currentCategory.CategoryID);
 
 			Application.Current.MainPage.DisplayAlert("Notification", "Category Record Deleted!", "OK");
 		}

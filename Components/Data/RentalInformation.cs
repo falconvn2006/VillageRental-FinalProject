@@ -20,6 +20,20 @@
             rentalItemList = new List<RentalItem>();
         }
 
+        public void UpdateRentalInformation(RentalInformation newRentalInformation, List<RentalItem> newRentalItemList)
+        {
+            CustomerID = newRentalInformation.CustomerID;
+            CurrentDate = newRentalInformation.CurrentDate;
+            CustomerLastName = newRentalInformation.CustomerLastName;
+            RentalStatus = newRentalInformation.RentalStatus;
+            rentalItemList.Clear();
+
+            foreach (RentalItem item in newRentalItemList)
+            {
+                AddRentalItem(item);
+            }
+        }
+
         public void AddRentalItem(RentalItem _item)
         {
             rentalItemList.Add(_item);

@@ -236,25 +236,48 @@ namespace VillageRental.Components.Instances
 			if (!connected)
 				return;
 
-			//using (StreamWriter stream = File.CreateText(DataFilePath.fileRentalInformationPath))
-			//{
-			//	foreach (RentalInformation information in sysManagement.rentalInformationList)
-			//	{
-			//		string currentDate = $"{information.CurrentDate.Day}/{information.CurrentDate.Month}/{information.CurrentDate.Year}";
-			//		string content = $"{information.RentalID};{currentDate};{information.CustomerID};";
-			//		foreach (RentalItem item in information.rentalItemList)
-			//		{
-			//			string copyContent = content.Clone().ToString();
-			//			string rentalDate = $"{item.RentalDate.Day}/{item.RentalDate.Month}/{item.RentalDate.Year}";
-			//			string returnDate = $"{item.ReturnDate.Day}/{item.ReturnDate.Month}/{item.ReturnDate.Year}";
-			//			copyContent += $"{item.EquipmentID};{rentalDate};{returnDate};{item.CostOfRental};";
-			//			copyContent += $"{item.Quantity};{information.RentalStatus}";
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
 
-			//			stream.WriteLine(copyContent);
-			//		}
-			//	}
-			//}
+			connection.Open();
+
+			foreach (RentalInformation information in sysManagement.rentalInformationList)
+			{
+				string currentDate = $"{information.CurrentDate.Date.Year}-{information.CurrentDate.Date.Month}-{information.CurrentDate.Date.Day}";
+				MySqlCommand rentalInformationCommand = new MySqlCommand($"INSERT INTO rental_information VALUES ({information.RentalID}, '{currentDate}', {information.CustomerID}, '{information.RentalStatus}') ON DUPLICATE KEY UPDATE current_date_of_rental='{currentDate}', customer_id={information.CustomerID}, rental_status='{information.RentalStatus}'", connection);
+				rentalInformationCommand.ExecuteNonQuery();
+
+				foreach (RentalItem item in information.rentalItemList)
+				{
+					string rentalDate = $"{item.RentalDate.Date.Year}-{item.RentalDate.Date.Month}-{item.RentalDate.Date.Day}";
+					string returnDate = $"{item.ReturnDate.Date.Year}-{item.ReturnDate.Date.Month}-{item.ReturnDate.Date.Day}";
+					MySqlCommand rentalItemCommand = new MySqlCommand($"INSERT INTO rental_item VALUES ({information.RentalID}, {item.EquipmentID}, '{rentalDate}', '{returnDate}', {item.Quantity}, {item.CostOfRental.ToString(nfi)}) ON DUPLICATE KEY UPDATE rental_date='{rentalDate}', return_date='{returnDate}', quantity={item.Quantity}, cost_of_rental={item.CostOfRental.ToString(nfi)}", connection);
+					rentalItemCommand.ExecuteNonQuery();
+				}
+			}
+
+			connection.Close();
 		}
+		#endregion
+
+		#region Delete Data
+
+		public void DeleteCategory(int _categoryIdToDelete)
+		{
+			if (!connected)
+				return;
+
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
+
+			connection.Open();
+
+			MySqlCommand deletionCommand = new MySqlCommand($"DELETE FROM category_item WHERE category_id={_categoryIdToDelete}", connection);
+			deletionCommand.ExecuteNonQuery();
+
+			connection.Close();
+		}
+
 		#endregion
 	}
 }

@@ -264,6 +264,9 @@ namespace VillageRental.Components.Instances
 
         public void RentItem(RentalInformation _rentalInformation)
         {
+            if (FindRentalInformation(_rentalInformation.RentalID) != null)
+                throw new SystemHandler("Rental Information with that ID already exists!");
+
             rentalInformationList.Add(_rentalInformation);
         }
 

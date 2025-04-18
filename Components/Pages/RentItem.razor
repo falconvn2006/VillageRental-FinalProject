@@ -1,11 +1,12 @@
 ﻿@page "/rentitem"
 @using VillageRental.Components.Data
+@using VillageRental.Components.Data.Exceptions
 @using VillageRental.Components.Instances
 @using System.Text.RegularExpressions
 @inject SystemManagement sysManagement
 @inject DatabaseManager dbManager
 
-<h1 class="text-center">Rent Equipment</h1>
+<h1 class="text-center">Rental Management</h1>
 
 <div class="d-flex flex-row gap-4 justify-content-between">
 	<div class="bg-secondary p-4 rounded-2 flex-fill">
@@ -15,7 +16,15 @@
 			<div class="mb-3 row">
 				<label for="rentalID" class="col-sm-3 col-form-label">Rental ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="rentalID" @bind="rentalID" />
+					@if (currentRentalInformation == null)
+					{
+						<input type="text" class="form-control" id="rentalID" @bind="rentalID" />
+					}
+					else
+					{
+						<input type="text" class="form-control" id="rentalID" @bind="rentalID" disabled />
+					}
+						
 				</div>
 			</div>
 			<div class="mb-3 row">
@@ -62,8 +71,16 @@
 			</div>
 			<div class="row mt-2">
 				<div class="col">
-					<button class="btn btn-primary" @onclick="Rent">Rent</button>
+					@if(currentRentalInformation == null)
+					{
+						<button class="btn btn-primary" @onclick="Rent">Rent</button>
+					}
+					else
+					{
+						<button class="btn btn-primary" @onclick="Rent">Save</button>
+					}
 					<button class="btn btn-primary" @onclick="ClearRentalDetails">Clear</button>
+					<button class="btn btn-primary" @onclick="() => showModal = true">Find Rental</button>
 				</div>
 			</div>
 		</div>
@@ -126,8 +143,36 @@
 	</div>
 </div>
 
+@if (showModal)
+{
+	<div class="modal fade show" id="exampleModal" tabindex="-1" style="display: block; background: #00000080;">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3 class="modal-title fs-5" id="exampleModalLabel">Find Rental Information</h3>
+					<button type="button" class="btn-close" @onclick="() => showModal = false"></button>
+				</div>
+				<div class="modal-body">
+					<div class="mb-3 row">
+						<label for="rentalIdToFind" class="col-sm-3 col-form-label">Rental ID:</label>
+						<div class="col-sm-9">
+							<input type="text" class="form-control" id="rentalIdToFind" @bind="rentalIdToFind" />
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" @onclick="() => showModal = false">Close</button>
+					<button type="button" class="btn btn-primary" @onclick="FindRental">Find</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
 
 @code {
+	private bool showModal;
+	private string rentalIdToFind;
+
 	private RentalInformation currentRentalInformation;
 	private List<RentalItem> currentRentalItemList = new List<RentalItem>();
 
@@ -154,23 +199,67 @@
 			return;
 		}
 
-		currentRentalInformation = new RentalInformation(Convert.ToInt32(rentalID), Convert.ToDateTime(currentDate), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
-		foreach(RentalItem item in currentRentalItemList)
+		if(currentRentalItemList.Count <= 0)
 		{
-			currentRentalInformation.AddRentalItem(item);
+			Application.Current.MainPage.DisplayAlert("Notification", "A rental information must have at least one rental item", "OK");
+			return;
 		}
 
-		sysManagement.RentItem(currentRentalInformation);
+		try
+		{
+			if(currentRentalInformation == null)
+			{
+				currentRentalInformation = new RentalInformation(Convert.ToInt32(rentalID), Convert.ToDateTime(currentDate), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
+				foreach (RentalItem item in currentRentalItemList)
+				{
+					currentRentalInformation.AddRentalItem(item);
+
+					Equipment updatedEquipmentData = new Equipment(
+						item.EquipmentID,
+						sysManagement.FindEquipment(item.EquipmentID).CategoryID,
+						sysManagement.FindEquipment(item.EquipmentID).Name,
+						sysManagement.FindEquipment(item.EquipmentID).Description,
+						sysManagement.FindEquipment(item.EquipmentID).DailyRentalCost,
+						sysManagement.FindEquipment(item.EquipmentID).AvailableQuantity - item.Quantity,
+						sysManagement.FindEquipment(item.EquipmentID).EquipmentStatus
+					);
 
 
-		Application.Current.MainPage.DisplayAlert("Notification", "Rental Information Created!", "OK");
+					sysManagement.UpdateEquipment(item.EquipmentID, updatedEquipmentData);
 
-		dbManager.WriteRentalInformationData(sysManagement);
+					dbManager.WriteEquipmentData(sysManagement);
+				}
 
-		currentRentalInformation = null;
+				sysManagement.RentItem(currentRentalInformation);
 
-		ClearRentalDetails();
-		ClearRentalItem();
+				Application.Current.MainPage.DisplayAlert("Notification", "Rental Information Created!", "OK");
+			}
+			else
+			{
+				RentalInformation newRentalData = new RentalInformation(Convert.ToInt32(rentalID), Convert.ToDateTime(currentDate), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
+
+				sysManagement.FindRentalInformation(Convert.ToInt32(rentalID)).UpdateRentalInformation(newRentalData, currentRentalItemList);
+
+				Application.Current.MainPage.DisplayAlert("Notification", "Rental Information Updated!", "OK");
+			}
+
+
+			dbManager.WriteRentalInformationData(sysManagement);
+
+			currentRentalInformation = null;
+
+			ClearRentalDetails();
+			ClearRentalItem();
+		}
+		catch(SystemHandler handler)
+		{
+			handler.DisplayError();
+		}
+		catch(Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
+		}
 	}
 
 	private void AddRentalItem()
@@ -198,33 +287,19 @@
 			return;
 		}
 
-		if(sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).AvailableQuantity < Convert.ToInt32(quantity))
+		if (sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).AvailableQuantity == 0)
+		{
+			Application.Current.MainPage.DisplayAlert("Notification", "This equipment doesn't have the available amount anymore", "OK");
+			return;
+		}
+		else if(sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).AvailableQuantity < Convert.ToInt32(quantity))
 		{
 			Application.Current.MainPage.DisplayAlert("Notification", "Rental quantity is LARGER than available quantity", "OK");
 			return;
 		}
 
-		if (sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).AvailableQuantity <= 0)
-		{
-			Application.Current.MainPage.DisplayAlert("Notification", "This equipment doesn't have the available amount anymore", "OK");
-			return;
-		}
-
 		RentalItem newRentalItem = new RentalItem(Convert.ToInt32(equipmentID), Convert.ToDateTime(rentalDate), Convert.ToDateTime(returnDate), Convert.ToDouble(costOfRental), Convert.ToInt32(quantity));
 		currentRentalItemList.Add(newRentalItem);
-
-		Equipment updatedEquipmentData = new Equipment(
-			Convert.ToInt32(equipmentID),
-			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).CategoryID,
-			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).Name,
-			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).Description,
-			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).DailyRentalCost,
-			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).AvailableQuantity - Convert.ToInt32(quantity),
-			sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).EquipmentStatus
-		);
-		sysManagement.UpdateEquipment(Convert.ToInt32(equipmentID), updatedEquipmentData);
-
-		dbManager.WriteEquipmentData(sysManagement);
 
 		Application.Current.MainPage.DisplayAlert("Notification", "Rental Item Added!", "OK");
 
@@ -241,6 +316,8 @@
 	private void ClearRentalDetails()
 	{
 		rentalID = customerID = currentDate = rentalStatus = totalCost = string.Empty;
+
+		currentRentalInformation = null;
 
 		currentRentalItemList.Clear();
 	}
@@ -259,12 +336,40 @@
 	{
 		if (currentRentalItemList.Count == 0)
 			return;	
-		
+
 
 		double _totalCost = 0.0;
 		foreach (RentalItem item in currentRentalItemList)
 			_totalCost += item.CostOfRental;
 
 		totalCost = _totalCost.ToString();
+	}
+
+	private void FindRental()
+	{
+		if (string.IsNullOrEmpty(rentalIdToFind))
+			return;
+
+		if(sysManagement.FindRentalInformation(Convert.ToInt32(rentalIdToFind)) == null)
+		{
+			Application.Current.MainPage.DisplayAlert("Notification", "Cannot find rental information with this ID", "OK");
+			return;
+		}
+
+		currentRentalInformation = sysManagement.FindRentalInformation(Convert.ToInt32(rentalIdToFind));
+
+		rentalID = currentRentalInformation.RentalID.ToString();
+		customerID = currentRentalInformation.CustomerID.ToString();
+		currentDate = $"{currentRentalInformation.CurrentDate.Day}/{currentRentalInformation.CurrentDate.Month}/{currentRentalInformation.CurrentDate.Year}";
+		rentalStatus = currentRentalInformation.RentalStatus;
+
+		foreach(RentalItem item in currentRentalInformation.rentalItemList)
+		{
+			currentRentalItemList.Add(item);
+		}
+
+		UpdateRentalCost();
+
+		showModal = false;
 	}
 }
