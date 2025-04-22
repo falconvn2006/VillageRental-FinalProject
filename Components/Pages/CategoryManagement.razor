@@ -35,20 +35,20 @@
 				@if(currentCategory == null)
 				{
 					<div class="col-sm-9">
-						<input type="text" class="form-control" id="categoryID" @bind="categoryID" />
+						<input type="text" class="form-control" id="categoryID" placeholder="Enter an ID for the category" @bind="categoryID" />
 					</div>
 				}
 				else
 				{
 					<div class="col-sm-9">
-						<input type="text" class="form-control" id="categoryID" @bind="categoryID" disabled />
+						<input type="text" class="form-control" id="categoryID" placeholder="Enter an ID for the category" @bind="categoryID" disabled />
 					</div>
 				}
 			</div>
 			<div class="mb-3 row">
 				<label for="description" class="col-sm-3 col-form-label">Category Description</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="description" @bind="description" />
+					<input type="text" class="form-control" id="description" placeholder="Enter a description for the category" @bind="description" />
 				</div>
 			</div>
 			</div>

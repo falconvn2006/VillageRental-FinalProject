@@ -9,10 +9,27 @@
 
 Welcome to Village Rentals. Where you will manage your customer data, equipment data and create rentals
 
+<!--
 <p>Loaded @sysManagement.customerList.Count customers into the system</p>
 <p>Loaded @sysManagement.equipmentList.Count equipments into the system</p>
 <p>Loaded @sysManagement.categoryList.Count category into the system</p>
 <p>Loaded @sysManagement.rentalInformationList.Count rental informations into the system</p>
+-->
+
+<div class="d-flex justify-content-around mt-2">
+	<div class="bg-primary text-white p-3 text-wrap rounded-2" style="width: 12rem;">
+		<p class="fs-4">Customers not banned</p>
+		<p class="fs-2">@sysManagement.customerList.Count((cust) => !cust.isBanned)</p>
+	</div>
+	<div class="bg-primary text-white p-3 text-wrap rounded-2" style="width: 12rem;">
+		<p class="fs-4">Equipments in stock</p>
+		<p class="fs-2">@sysManagement.equipmentList.Count((equip) => equip.AvailableQuantity > 0)</p>
+	</div>
+	<div class="bg-primary text-white p-3 text-wrap rounded-2" style="width: 12rem;">
+		<p class="fs-4">Rental Records</p>
+		<p class="fs-2">@sysManagement.rentalInformationList.Count()</p>
+	</div>
+</div>
 
 @code{
 	private string applicationStoragePath = FileSystem.Current.AppDataDirectory;

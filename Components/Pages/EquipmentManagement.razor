@@ -46,20 +46,20 @@
 				@if(currentEquipment == null)
 				{
 					<div class="col-sm-9">
-						<input type="text" class="form-control" id="equipmentID" @bind="equipmentID" />
+						<input type="text" class="form-control" id="equipmentID" placeholder="Enter an ID for the equipment" @bind="equipmentID" />
 					</div>
 				}
 				else
 				{
 					<div class="col-sm-9">
-						<input type="text" class="form-control" id="equipmentID" @bind="equipmentID" disabled />
+						<input type="text" class="form-control" id="equipmentID" placeholder="Enter an ID for the equipment" @bind="equipmentID" disabled />
 					</div>
 				}
 			</div>
 			<div class="mb-3 row">
 				<label for="categoryID" class="col-sm-3 col-form-label">Category ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="categoryID" value="@categoryID" @onchange="(ChangeEventArgs __e) => {
+					<input type="text" class="form-control" id="categoryID" placeholder="Enter the Category ID for the equipment to belong to (must be an existing category)" value="@categoryID" @onchange="(ChangeEventArgs __e) => {
 							categoryID = __e.Value.ToString();
 							UpdateCategoryText();
 						}" 
@@ -70,31 +70,31 @@
 			<div class="mb-3 row">
 				<label for="name" class="col-sm-3 col-form-label">Name</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="name" @bind="name" />
+					<input type="text" class="form-control" id="name" placeholder="Enter a name for the equipment" @bind="name" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="description" class="col-sm-3 col-form-label">Description</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="description" @bind="description" />
+					<input type="text" class="form-control" id="description" placeholder="Enter an description for the equipment" @bind="description" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="dailyRentalCost" class="col-sm-3 col-form-label">Daily Rental Cost</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="dailyRentalCost" @bind="dailyRentalCost" />
+					<input type="text" class="form-control" id="dailyRentalCost" placeholder="Enter the cost per day for the equipment (ex: 12,99)" @bind="dailyRentalCost" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="quantity" class="col-sm-3 col-form-label">Quantity</label>
 				<div class="col-sm-9">
-					<input type="number" class="form-control" id="quantity" @bind="quantity" />
+					<input type="number" min="0" class="form-control" id="quantity" @bind="quantity" />
 				</div>
 			</div>
 			<div class="mb-3 row">
-				<label for="equipmentStatus" class="col-sm-3 col-form-label">equipmentStatus</label>
+				<label for="equipmentStatus" class="col-sm-3 col-form-label">Equipment Status</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="equipmentStatus" @bind="equipmentStatus" />
+					<input type="text" class="form-control" id="equipmentStatus" placeholder="Enter the status of the equipment (Good, Damaged,...)" @bind="equipmentStatus" />
 				</div>
 			</div>
 			<div class="container gap-4 text-center">
@@ -177,7 +177,7 @@
 
 	private void ClearSearchResult()
 	{
-		equipmentSearchResultList = new List<Equipment>();
+		equipmentSearchResultList.Clear();
 		currentEquipment = null;
 	}
 

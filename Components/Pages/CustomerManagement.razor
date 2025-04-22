@@ -47,38 +47,38 @@
 				@if(currentCustomer == null)
 				{
 					<div class="col-sm-9">
-						<input type="text" class="form-control" id="customerID" @bind="customerID" />
+						<input type="text" class="form-control" id="customerID" placeholder="Enter an ID for the customer" @bind="customerID" />
 					</div>
 				}
 				else
 				{
 					<div class="col-sm-9">
-						<input type="text" class="form-control" id="customerID" @bind="customerID" disabled />
+						<input type="text" class="form-control" id="customerID" placeholder="Enter an ID for the customer" @bind="customerID" disabled />
 					</div>
 				}
 			</div>
 			<div class="mb-3 row">
 				<label for="firstName" class="col-sm-3 col-form-label">First Name</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="firstName" @bind="firstName" />
+					<input type="text" class="form-control" id="firstName" placeholder="Enter the firstname for the customer" @bind="firstName" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="lastName" class="col-sm-3 col-form-label">Last Name</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="lastName" @bind="lastName" />
+					<input type="text" class="form-control" id="lastName" placeholder="Enter the lastname for the customer" @bind="lastName" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="phoneNumber" class="col-sm-3 col-form-label">Phone Number</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="phoneNumber" @bind="phoneNumber" />
+					<input type="text" class="form-control" id="phoneNumber" placeholder="Enter the phone number in format: '(555) 555-1212'" @bind="phoneNumber" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="email" class="col-sm-3 col-form-label">Email</label>
 				<div class="col-sm-9">
-					<input type="email" class="form-control" id="email" @bind="email" />
+					<input type="email" class="form-control" id="email" placeholder="Enter the email for the customer" @bind="email" />
 				</div>
 			</div>
 			<div class="form-check form-check-reverse">
@@ -160,7 +160,7 @@
 
 	private void ClearResult()
 	{
-		customerSearchResult = new List<Customer>();
+		customerSearchResult.Clear();
 		searchStatus = "";
 	}
 

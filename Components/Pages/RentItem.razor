@@ -18,7 +18,7 @@
 				<div class="col-sm-9">
 					@if (currentRentalInformation == null)
 					{
-						<input type="text" class="form-control" id="rentalID" @bind="rentalID" />
+						<input type="text" class="form-control" id="rentalID" placeholder="Enter an ID for the rental information" @bind="rentalID" />
 					}
 					else
 					{
@@ -30,7 +30,7 @@
 			<div class="mb-3 row">
 				<label for="customerID" class="col-sm-3 col-form-label">Customer ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="customerID" @bind="customerID" />
+					<input type="text" class="form-control" id="customerID" placeholder="Enter an ID of a customer who is renting" @bind="customerID" />
 				</div>
 			</div>
 			<div class="mb-3 row">
@@ -42,7 +42,7 @@
 			<div class="mb-3 row">
 				<label for="rentalStatus" class="col-sm-3 col-form-label">Rental Status</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="rentalStatus" @bind="rentalStatus" />
+					<input type="text" class="form-control" id="rentalStatus" placeholder="Enter the status of the rental (Renting, Paying, Returning,...)" @bind="rentalStatus" />
 				</div>
 			</div>
 			<p>TOTAL COST: $@totalCost</p>
@@ -57,8 +57,8 @@
 						<p>Equipment ID: @item.EquipmentID</p>
 						<div class="row mt-2">
 							<div class="col">
-								<p>Rental Date: @($"{item.RentalDate.Day}/{item.RentalDate.Month}/{item.RentalDate.Year}")</p>
-								<p>Return Date: @($"{item.ReturnDate.Day}/{item.ReturnDate.Month}/{item.ReturnDate.Year}")</p>
+								<p>Rental Date: @($"{item.RentalDate.Month}/{item.RentalDate.Day}/{item.RentalDate.Year}")</p>
+								<p>Return Date: @($"{item.ReturnDate.Month}/{item.ReturnDate.Day}/{item.ReturnDate.Year}")</p>
 							</div>
 							<div class="col">
 								<p>Cost of Rental: $@item.CostOfRental</p>
@@ -87,13 +87,13 @@
 		</div>
 	</div>
 
-	<div class="bg-secondary p-3 rounded-2">
+	<div class="bg-secondary p-4 rounded-2">
 		<h3 class="text-center">Add Rental Item</h3>
 		<div>
 			<div class="mb-3 row">
 				<label for="equipmentID" class="col-sm-3 col-form-label">Equipment ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="equipmentID" value="@equipmentID" @onchange="(ChangeEventArgs __e) => {
+					<input type="text" class="form-control" id="equipmentID" placeholder="Enter an ID of the equipment to rent" value="@equipmentID" @onchange="(ChangeEventArgs __e) => {
 							equipmentID = __e.Value.ToString();
 							UpdateRentalCost();
 						}" />
@@ -120,7 +120,7 @@
 			<div class="mb-3 row">
 				<label for="quantity" class="col-sm-3 col-form-label">Quantity</label>
 				<div class="col-sm-9">
-					<input type="number" class="form-control" id="quantity" value="@quantity" @onchange="(ChangeEventArgs __e) => {
+					<input type="number" min="0" class="form-control" id="quantity" value="@quantity" @onchange="(ChangeEventArgs __e) => {
 							quantity = __e.Value.ToString();
 							UpdateRentalCost();
 						}" />
@@ -129,7 +129,7 @@
 			<div class="mb-3 row">
 				<label for="costOfRental" class="col-sm-3 col-form-label">Cost of Rental</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="dailyRentalCost" @bind="costOfRental" disabled />
+					<input type="text" class="form-control" id="dailyRentalCost" placeholder="Cost will be calculated after all the information is entered" @bind="costOfRental" disabled />
 				</div>
 			</div>
 			<div class="container gap-4 text-center">
