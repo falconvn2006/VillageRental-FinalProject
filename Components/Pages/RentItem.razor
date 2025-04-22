@@ -36,7 +36,7 @@
 			<div class="mb-3 row">
 				<label for="currentDate" class="col-sm-3 col-form-label">Date</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="currentDate" @bind="currentDate" />
+					<input type="date" class="form-control" id="currentDate" @bind="currentDate" />
 				</div>
 			</div>
 			<div class="mb-3 row">
@@ -78,6 +78,7 @@
 					else
 					{
 						<button class="btn btn-primary" @onclick="Rent">Save</button>
+						<button class="btn btn-primary" @onclick="DeleteRentalInformation">Delete Record</button>
 					}
 					<button class="btn btn-primary" @onclick="ClearRentalDetails">Clear</button>
 					<button class="btn btn-primary" @onclick="() => showModal = true">Find Rental</button>
@@ -101,7 +102,7 @@
 			<div class="mb-3 row">
 				<label for="rentalDate" class="col-sm-3 col-form-label">Rental Date</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="rentalDate" value="@rentalDate" @onchange="(ChangeEventArgs __e) => {
+					<input type="date" class="form-control" id="rentalDate" value="@rentalDate" @onchange="(ChangeEventArgs __e) => {
 							rentalDate = __e.Value.ToString();
 							UpdateRentalCost();
 						}" />
@@ -110,7 +111,7 @@
 			<div class="mb-3 row">
 				<label for="returnDate" class="col-sm-3 col-form-label">Return Date</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="returnDate" value="@returnDate" @onchange="(ChangeEventArgs __e) => {
+					<input type="date" class="form-control" id="returnDate" value="@returnDate" @onchange="(ChangeEventArgs __e) => {
 							returnDate = __e.Value.ToString();
 							UpdateRentalCost();
 						}" />
@@ -176,22 +177,17 @@
 	private RentalInformation currentRentalInformation;
 	private List<RentalItem> currentRentalItemList = new List<RentalItem>();
 
-	private string rentalID, customerID, currentDate, rentalStatus, totalCost;
+	private string rentalID, customerID, rentalStatus, totalCost;
+	private DateOnly currentDate = DateOnly.FromDateTime(DateTime.Now);
 
 	private string equipmentID, rentalDate, returnDate, quantity, costOfRental;
 
-	private Regex regexDate = new Regex(@"^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$");
+	// private Regex regexDate = new Regex(@"^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$");
 
 	private void Rent()
 	{
-		if (string.IsNullOrEmpty(rentalID) || string.IsNullOrEmpty(customerID) || string.IsNullOrEmpty(currentDate) || string.IsNullOrEmpty(rentalStatus))
+		if (string.IsNullOrEmpty(rentalID) || string.IsNullOrEmpty(customerID) || string.IsNullOrEmpty(rentalStatus))
 			return;
-
-		if(!regexDate.IsMatch(currentDate))
-		{
-			Application.Current.MainPage.DisplayAlert("Error encounter!", "Invalid date format (dd/mm/yyyy)", "OK");
-			return;
-		}
 
 		if(sysManagement.FindCustomer(Convert.ToInt32(customerID)) == null)
 		{
@@ -209,7 +205,7 @@
 		{
 			if(currentRentalInformation == null)
 			{
-				currentRentalInformation = new RentalInformation(Convert.ToInt32(rentalID), Convert.ToDateTime(currentDate), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
+				currentRentalInformation = new RentalInformation(Convert.ToInt32(rentalID), currentDate.ToDateTime(TimeOnly.MinValue), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
 				foreach (RentalItem item in currentRentalItemList)
 				{
 					currentRentalInformation.AddRentalItem(item);
@@ -236,7 +232,9 @@
 			}
 			else
 			{
-				RentalInformation newRentalData = new RentalInformation(Convert.ToInt32(rentalID), Convert.ToDateTime(currentDate), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
+				RentalInformation newRentalData = new RentalInformation(Convert.ToInt32(rentalID), currentDate.ToDateTime(TimeOnly.MinValue), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
+
+				dbManager.DeleteAllRentalItemInRentalInformation(Convert.ToInt32(rentalID));
 
 				sysManagement.FindRentalInformation(Convert.ToInt32(rentalID)).UpdateRentalInformation(newRentalData, currentRentalItemList);
 
@@ -269,15 +267,9 @@
 			return;
 		}
 
-		if (!regexDate.IsMatch(rentalDate))
+		if(Convert.ToDateTime(rentalDate) >= Convert.ToDateTime(returnDate))
 		{
-			Application.Current.MainPage.DisplayAlert("Error encounter!", "Invalid rental date format (dd/mm/yyyy)", "OK");
-			return;
-		}
-
-		if (!regexDate.IsMatch(returnDate))
-		{
-			Application.Current.MainPage.DisplayAlert("Error encounter!", "Invalid return date format (dd/mm/yyyy)", "OK");
+			Application.Current.MainPage.DisplayAlert("Error encounter!", "Invalid rental date range (rental date must be larger than return date)", "OK");
 			return;
 		}
 
@@ -315,7 +307,8 @@
 
 	private void ClearRentalDetails()
 	{
-		rentalID = customerID = currentDate = rentalStatus = totalCost = string.Empty;
+		rentalID = customerID = rentalStatus = totalCost = string.Empty;
+		currentDate = DateOnly.FromDateTime(DateTime.Now);
 
 		currentRentalInformation = null;
 
@@ -360,7 +353,7 @@
 
 		rentalID = currentRentalInformation.RentalID.ToString();
 		customerID = currentRentalInformation.CustomerID.ToString();
-		currentDate = $"{currentRentalInformation.CurrentDate.Day}/{currentRentalInformation.CurrentDate.Month}/{currentRentalInformation.CurrentDate.Year}";
+		currentDate = DateOnly.FromDateTime(currentRentalInformation.CurrentDate);
 		rentalStatus = currentRentalInformation.RentalStatus;
 
 		foreach(RentalItem item in currentRentalInformation.rentalItemList)
@@ -371,5 +364,32 @@
 		UpdateRentalCost();
 
 		showModal = false;
+		rentalIdToFind = string.Empty;
+	}
+
+	private void DeleteRentalInformation()
+	{
+		if (currentRentalInformation == null)
+			return;
+
+		try
+		{
+			dbManager.DeleteRentalInformation(currentRentalInformation.RentalID);
+			sysManagement.RemoveRentalInformation(currentRentalInformation.RentalID);
+
+			Application.Current.MainPage.DisplayAlert("Notification", "Rental information delete successfully", "OK");
+
+			ClearRentalItem();
+			ClearRentalDetails();
+		}
+		catch(SystemHandler handler)
+		{
+			handler.DisplayError();
+		}
+		catch(Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
+		}
 	}
 }

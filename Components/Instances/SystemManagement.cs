@@ -270,6 +270,13 @@ namespace VillageRental.Components.Instances
             rentalInformationList.Add(_rentalInformation);
         }
 
+        public void RemoveRentalInformation(int _rentalId)
+        {
+            RentalInformation informationToRemmove = FindRentalInformation(_rentalId);
+
+            rentalInformationList.Remove(informationToRemmove);
+        }
+
         public RentalInformation FindRentalInformation(int _rentalId)
         {
             foreach(RentalInformation information in  rentalInformationList)

@@ -306,26 +306,19 @@
 
 	private void RemoveFromInventory()
 	{
-		equipmentID = string.Empty;
-		categoryID = string.Empty;
-		name = string.Empty;
-		description = string.Empty;
-		dailyRentalCost = string.Empty;
-		quantity = string.Empty;
-		equipmentStatus = string.Empty;
-
 		try
 		{
 			sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
 
-			dbManager.WriteEquipmentData(sysManagement);
+			dbManager.DeleteEquipment(currentEquipment.EquipmentID);
+
+			ClearEquipmentInfo();
+			ClearSearchResult();
 		}
 		catch(SystemHandler systemHandler)
 		{
 			systemHandler.DisplayError();
 		}
-
-		currentEquipment = null;
 	}
 
 	private void ShowSellModal()
@@ -353,17 +346,21 @@
 
 			sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
 
-			dbManager.WriteEquipmentData(sysManagement);
+			dbManager.DeleteEquipment(currentEquipment.EquipmentID);
 
 			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Sold!", "OK");
+
+			ClearEquipmentInfo();
+			ClearSearchResult();
 		}
 		catch(SystemHandler systemHandler)
 		{
 			systemHandler.DisplayError();
 		}
-		finally
+		catch(Exception exception)
 		{
-			ClearEquipmentInfo();
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
 		}
 	}
 }

@@ -14,7 +14,7 @@ namespace VillageRental.Components.Instances
 
 		NumberFormatInfo nfi = new NumberFormatInfo();
 
-		public DatabaseManager(string serverAddress = "", string username = "", string password = "", string databaseName = "") 
+		public DatabaseManager(string serverAddress = "", string username = "", string password = "", string databaseName = "")
 		{
 			nfi.NumberDecimalSeparator = ".";
 
@@ -101,7 +101,7 @@ namespace VillageRental.Components.Instances
 			connection.Open();
 
 			MySqlCommand command = new MySqlCommand("SELECT * FROM equipment", connection);
-			using(MySqlDataReader reader = command.ExecuteReader())
+			using (MySqlDataReader reader = command.ExecuteReader())
 			{
 				while (reader.Read())
 				{
@@ -183,7 +183,7 @@ namespace VillageRental.Components.Instances
 
 			connection.Open();
 
-			foreach(CategoryItem item in sysManagement.categoryList)
+			foreach (CategoryItem item in sysManagement.categoryList)
 			{
 				MySqlCommand command = new MySqlCommand($"INSERT INTO category_item VALUES ({item.CategoryID}, '{item.Description}') ON DUPLICATE KEY UPDATE description='{item.Description}';", connection);
 				command.ExecuteNonQuery();
@@ -202,7 +202,7 @@ namespace VillageRental.Components.Instances
 
 			connection.Open();
 
-			foreach(Customer customer in sysManagement.customerList)
+			foreach (Customer customer in sysManagement.customerList)
 			{
 				MySqlCommand command = new MySqlCommand($"INSERT INTO customer VALUES ({customer.CustomerID}, '{customer.LastName}', '{customer.FirstName}', '{customer.PhoneNumber}', '{customer.Email}', {(customer.isBanned ? 1 : 0)}) ON DUPLICATE KEY UPDATE last_name='{customer.LastName}', first_name='{customer.FirstName}', phone_number='{customer.PhoneNumber}', email='{customer.Email}', is_banned={(customer.isBanned ? 1 : 0)};", connection);
 				command.ExecuteNonQuery();
@@ -273,6 +273,88 @@ namespace VillageRental.Components.Instances
 			connection.Open();
 
 			MySqlCommand deletionCommand = new MySqlCommand($"DELETE FROM category_item WHERE category_id={_categoryIdToDelete}", connection);
+			deletionCommand.ExecuteNonQuery();
+
+			connection.Close();
+		}
+
+		public void DeleteCustomer(int _customerIdToDelete)
+		{
+			if (!connected)
+				return;
+
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
+
+			connection.Open();
+
+			MySqlCommand deletionCommand = new MySqlCommand($"DELETE FROM customer WHERE customer_id={_customerIdToDelete}", connection);
+			deletionCommand.ExecuteNonQuery();
+
+			connection.Close();
+		}
+
+		public void DeleteEquipment(int _equipmentIdToDelete)
+		{
+			if (!connected)
+				return;
+
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
+
+			connection.Open();
+
+			MySqlCommand deletionCommand = new MySqlCommand($"DELETE FROM equipment WHERE equipment_id={_equipmentIdToDelete}", connection);
+			deletionCommand.ExecuteNonQuery();
+
+			connection.Close();
+		}
+
+		public void DeleteRentalItem(int _rentalInformationIdToDelete, int _rentalEquipmentIdToDelete)
+		{
+			if (!connected)
+				return;
+
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
+
+			connection.Open();
+
+			MySqlCommand deletionCommand = new MySqlCommand($"DELETE FROM rental_item WHERE rental_id={_rentalInformationIdToDelete} AND equipment_id={_rentalEquipmentIdToDelete}", connection);
+			deletionCommand.ExecuteNonQuery();
+
+			connection.Close();
+		}
+
+		public void DeleteAllRentalItemInRentalInformation(int _rentalInformationIdToDelete)
+		{
+			if (!connected)
+				return;
+
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
+
+			connection.Open();
+
+			MySqlCommand deletionCommand = new MySqlCommand($"DELETE FROM rental_item WHERE rental_id={_rentalInformationIdToDelete}", connection);
+			deletionCommand.ExecuteNonQuery();
+
+			connection.Close();
+		}
+
+		public void DeleteRentalInformation(int _rentalInformationIdToDelete)
+		{
+			DeleteAllRentalItemInRentalInformation(_rentalInformationIdToDelete);
+
+			if (!connected)
+				return;
+
+			if (connection.State == System.Data.ConnectionState.Open)
+				connection.Close();
+
+			connection.Open();
+
+			MySqlCommand deletionCommand = new MySqlCommand($"DELETE FROM rental_information WHERE rental_id={_rentalInformationIdToDelete}", connection);
 			deletionCommand.ExecuteNonQuery();
 
 			connection.Close();

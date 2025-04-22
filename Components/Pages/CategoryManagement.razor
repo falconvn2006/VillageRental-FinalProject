@@ -96,7 +96,9 @@
 	{
 		if (string.IsNullOrEmpty(categoryID) || string.IsNullOrEmpty(description))
 		{
-			currentCategory = null;		
+			Application.Current.MainPage.DisplayAlert("Notification", "Category ID and Description cannot be empty!", "OK");
+
+			currentCategory = null;
 			return;
 		}
 
