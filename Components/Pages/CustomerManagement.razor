@@ -17,6 +17,7 @@
 				<option selected value="CustomerID">Customer ID</option>
 				<option value="LastName">Last Name</option>
 				<option value="Email">Email</option>
+				<option value="SearchAll">Search All</option>
 			</select>
 		</div>
 		<hr />
@@ -118,7 +119,7 @@
 
 	private void FindCustomer()
 	{
-		if (string.IsNullOrEmpty(searchFieldValue))
+		if (string.IsNullOrEmpty(searchFieldValue) && searchFilter != "SearchAll")
 			return;
 
 		switch(searchFilter)
@@ -131,6 +132,9 @@
 				break;
 			case "Email":
 				customerSearchResult = sysManagement.FindCustomerMultipleResultByEmail(searchFieldValue);
+				break;
+			case "SearchAll":
+				customerSearchResult = sysManagement.customerList.ToList();
 				break;
 			default:
 				break;
@@ -177,9 +181,8 @@
 			return;
 
 		sysManagement.BanCustomer(currentCustomer.CustomerID);
+		dbManager.WriteCustomerData(sysManagement);
 		SetCurrentCustomer(currentCustomer);
-
-
 	}
 
 	private void CreateCustomer()

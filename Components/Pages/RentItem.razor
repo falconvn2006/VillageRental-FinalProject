@@ -195,6 +195,12 @@
 			return;
 		}
 
+		if(sysManagement.FindCustomer(Convert.ToInt32(customerID)).isBanned)
+		{
+			Application.Current.MainPage.DisplayAlert("Notification", "Customer is banned and cannot rent", "OK");
+			return;
+		}
+
 		if(currentRentalItemList.Count <= 0)
 		{
 			Application.Current.MainPage.DisplayAlert("Notification", "A rental information must have at least one rental item", "OK");
