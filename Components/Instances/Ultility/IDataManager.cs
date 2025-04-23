@@ -59,6 +59,11 @@
 		#endregion
 
 		#region Delete Data
+		/// <summary>
+		/// Remove a category base on its id from a file or database
+		/// </summary>
+		/// <param name="_categoryIdToDelete"></param>
+		void DeleteCategory(int _categoryIdToDelete);
 
 		/// <summary>
 		/// Remove a customer base on its id from a file or database

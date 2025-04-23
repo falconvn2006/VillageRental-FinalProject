@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using VillageRental.Components.Instances;
-using VillageRental.Components.Instances.Ultility;
 
 namespace VillageRental
 {
@@ -17,11 +16,11 @@ namespace VillageRental
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
-            IConfigurationRoot config = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json")
-                .Build();
+			IConfigurationRoot config = new ConfigurationBuilder()
+				.AddJsonFile("appsettings.json")
+				.Build();
 
-            builder.Services.AddMauiBlazorWebView();
+			builder.Services.AddMauiBlazorWebView();
             builder.Services.AddSingleton<SystemManagement>();
 
 			string? databaseAddress = config["DATABASE_SERVER_ADDRESS"];
@@ -32,7 +31,7 @@ namespace VillageRental
 			builder.Services.AddSingleton((db) => new DatabaseManager(databaseAddress, databaseUsername, databasePassword, databaseName));
 
 #if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
+			builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
 
