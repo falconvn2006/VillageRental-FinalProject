@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using VillageRental.Components.Instances;
+using VillageRental.Components.Instances.Ultility;
 
 namespace VillageRental
 {

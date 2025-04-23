@@ -2,10 +2,11 @@
 using System.Globalization;
 using VillageRental.Components.Data;
 using VillageRental.Components.Data.Exceptions;
+using VillageRental.Components.Instances.Ultility;
 
 namespace VillageRental.Components.Instances
 {
-	class DatabaseManager
+	class DatabaseManager : IDataManager
 	{
 		public bool loadOnStart = false;
 		private bool connected = false;
