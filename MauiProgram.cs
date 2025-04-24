@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Maui.LifecycleEvents;
+using Microsoft.Extensions.Configuration;
 using VillageRental.Components.Instances;
 
 namespace VillageRental
@@ -16,12 +16,22 @@ namespace VillageRental
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
-            builder.Services.AddMauiBlazorWebView();
+			IConfigurationRoot config = new ConfigurationBuilder()
+				.AddJsonFile("appsettings.json")
+				.Build();
+
+			builder.Services.AddMauiBlazorWebView();
             builder.Services.AddSingleton<SystemManagement>();
-            builder.Services.AddSingleton<DatabaseManager>();
+
+			string? databaseAddress = config["DATABASE_SERVER_ADDRESS"];
+			string? databaseUsername = config["USERNAME"];
+			string? databasePassword = config["PASSWORD"];
+			string? databaseName = config["DATABASE_NAME"];
+
+			builder.Services.AddSingleton((db) => new DatabaseManager(databaseAddress, databaseUsername, databasePassword, databaseName));
 
 #if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
+			builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
 

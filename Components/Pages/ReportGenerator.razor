@@ -1,19 +1,19 @@
 ﻿@page "/reportgenerator"
-@using VillageRental.Components.Data
 @using VillageRental.Components.Instances
 @inject SystemManagement sysManagement
 
-<h1 class="text-center">Report Generator</h1>
+<h1 class="d-print-none text-center">Report Generator</h1>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
-	<div class="bg-secondary p-4 rounded-2">
+	<!-- Report type section -->
+	<div class="d-print-none bg-secondary p-4 rounded-2">
 		<h3 class="text-center">Report Type</h3>
 		<div>
 			<select class="form-select d-inline" value="@reportType" @onchange="(ChangeEventArgs __e) => {
 					reportType = __e.Value.ToString();
 					showTable = false;
 				}" >
-				<option selected value="ListAllClients">List all clients</option>
+				<option selected value="ListAllCustomers">List all customers</option>
 				<option value="ListAllEquipment">List all equipment</option>
 				<option value="ListAllCategory">List all category</option>
 				<option value="ListAllRentalInformation">List all rental information</option>
@@ -29,12 +29,32 @@
 		</div>
 	</div>
 
+	<!-- Display report section -->
 	<div class="bg-secondary p-3 rounded-2 flex-fill">
-		<h3 class="text-center">Report</h3>
-		<div class="overflow-auto overflow-scroll">
+		@switch(reportType)
+		{
+			case "ListAllCustomers":
+				<h3 class="text-center">Customers Report</h3>
+				break;
+			case "ListAllEquipment":
+				<h3 class="text-center">Equipment Report</h3>
+				break;
+			case "ListAllCategory":
+				<h3 class="text-center">Category Report</h3>
+				break;
+			case "ListAllRentalInformation":
+				<h3 class="text-center">Rentals Report</h3>
+				break;
+		}
+		<div class="mx-auto">
 			@if(showTable)
 			{
 				<Report ReportType="@reportType" />
+				<button class="d-print-none btn btn-primary" onclick="window.print()">Print To PDF</button>
+			}
+			else
+			{
+				<p>Press the "Generate" button to create a report</p>
 			}
 		</div>
 	</div>
@@ -42,7 +62,7 @@
 
 
 @code {
-	private string reportType = "ListAllClients";
+	private string reportType = "ListAllCustomers";
 
 	private bool showTable = false;
 }

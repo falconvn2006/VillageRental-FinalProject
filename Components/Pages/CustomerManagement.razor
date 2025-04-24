@@ -1,4 +1,5 @@
 ﻿@page "/customermanagement"
+@using System.Text.RegularExpressions
 @using VillageRental.Components.Instances
 @using VillageRental.Components.Data
 @using VillageRental.Components.Data.Exceptions
@@ -8,6 +9,7 @@
 <h1 class="text-center">Customer Management</h1>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
+	<!-- Search section -->
 	<div class="bg-secondary p-4 rounded-2">
 		<h3 class="text-center">Search Customer</h3>
 		<div>
@@ -16,6 +18,7 @@
 				<option selected value="CustomerID">Customer ID</option>
 				<option value="LastName">Last Name</option>
 				<option value="Email">Email</option>
+				<option value="SearchAll">Search All</option>
 			</select>
 		</div>
 		<hr />
@@ -39,36 +42,46 @@
 	</div>
 
 	<div class="bg-secondary p-3 rounded-2 flex-fill">
+		<!-- Create / Edit customer -->
 		<h3 class="text-center">Customer Information</h3>
 		<div>
 			<div class="mb-3 row">
 				<label for="customerID" class="col-sm-3 col-form-label">Customer ID</label>
-				<div class="col-sm-9">
-					<input type="text" class="form-control" id="customerID" @bind="customerID" />
-				</div>
+				@if(currentCustomer == null)
+				{
+					<div class="col-sm-9">
+						<input type="text" class="form-control" id="customerID" placeholder="Enter an ID for the customer" @bind="customerID" />
+					</div>
+				}
+				else
+				{
+					<div class="col-sm-9">
+						<input type="text" class="form-control" id="customerID" placeholder="Enter an ID for the customer" @bind="customerID" disabled />
+					</div>
+				}
 			</div>
 			<div class="mb-3 row">
 				<label for="firstName" class="col-sm-3 col-form-label">First Name</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="firstName" @bind="firstName" />
+					<input type="text" class="form-control" id="firstName" placeholder="Enter the firstname for the customer" @bind="firstName" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="lastName" class="col-sm-3 col-form-label">Last Name</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="lastName" @bind="lastName" />
+					<input type="text" class="form-control" id="lastName" placeholder="Enter the lastname for the customer" @bind="lastName" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="phoneNumber" class="col-sm-3 col-form-label">Phone Number</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="phoneNumber" @bind="phoneNumber" />
+					<input type="text" class="form-control" id="phoneNumber" placeholder="Enter the phone number in format: '(555) 555-1212'" @bind="phoneNumber" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="email" class="col-sm-3 col-form-label">Email</label>
 				<div class="col-sm-9">
-					<input type="email" class="form-control" id="email" @bind="email" />
+					<input type="email" class="form-control" id="email" placeholder="Enter the email for the customer" @bind="email" />
 				</div>
 			</div>
 			<div class="form-check form-check-reverse">
@@ -79,7 +92,7 @@
 				<div class="row">
 					<div class="col">
 						<button class="btn btn-primary" @onclick="CreateCustomer">Save</button>
-						<button class="btn btn-primary" @onclick="BanCustomer">Ban Customer</button>
+						<button class="btn btn-primary" @onclick="SetBanCustomer">@((currentCustomer == null || !currentCustomer.isBanned) ? "Ban Customer" : "Unban Customer")</button>
 					</div>
 				</div>
 				<div class="row mt-2">
@@ -103,14 +116,16 @@
 
 	private string searchStatus = "";
 
+	// Binding
 	private string customerID, firstName, lastName, phoneNumber, email;
 	private bool banned = false;
 
 	private void FindCustomer()
 	{
-		if (string.IsNullOrEmpty(searchFieldValue))
+		if (string.IsNullOrEmpty(searchFieldValue) && searchFilter != "SearchAll")
 			return;
 
+		// Get the search result using different finding functions in the System Management class
 		switch(searchFilter)
 		{
 			case "CustomerID":
@@ -121,6 +136,9 @@
 				break;
 			case "Email":
 				customerSearchResult = sysManagement.FindCustomerMultipleResultByEmail(searchFieldValue);
+				break;
+			case "SearchAll":
+				customerSearchResult = sysManagement.customerList.ToList();
 				break;
 			default:
 				break;
@@ -150,7 +168,7 @@
 
 	private void ClearResult()
 	{
-		customerSearchResult = new List<Customer>();
+		customerSearchResult.Clear();
 		searchStatus = "";
 	}
 
@@ -161,15 +179,33 @@
 		banned = false;
 	}
 
-	private void BanCustomer()
+	private void SetBanCustomer()
 	{
 		if (currentCustomer == null)
 			return;
 
-		sysManagement.BanCustomer(currentCustomer.CustomerID);
-		SetCurrentCustomer(currentCustomer);
+		try
+		{
+			if (currentCustomer.isBanned)
+				sysManagement.UnbanCustomer(currentCustomer.CustomerID);
+			else
+				sysManagement.BanCustomer(currentCustomer.CustomerID);
 
-
+			dbManager.WriteCustomerData(sysManagement);
+			SetCurrentCustomer(currentCustomer);
+		}
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
+		{
+			handler.DisplayError();
+		}
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
+		}
 	}
 
 	private void CreateCustomer()
@@ -180,29 +216,42 @@
 			return;
 		}
 
-		if(currentCustomer == null)
+		try
 		{
-			Customer newCustomer = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
-			sysManagement.AddCustomerToList(newCustomer);
+			// If there isn't any customer selected from the search result
+			// Means that we are creating a new customer
+			if (currentCustomer == null)
+			{
+				Customer newCustomer = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
+				sysManagement.AddCustomerToList(newCustomer);
 
-			Application.Current.MainPage.DisplayAlert("Notification", "Customer Created!", "OK");
+				Application.Current.MainPage.DisplayAlert("Notification", "Customer Created!", "OK");
 
-			customerID = string.Empty;
-			firstName = string.Empty;
-			lastName = string.Empty;
-			phoneNumber = string.Empty;
-			email = string.Empty;
-			currentCustomer = null;
+				ClearCustomerInformation();
+			}
+			else
+			{
+				Customer newCustomerData = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
+				sysManagement.UpdateCustomer(currentCustomer.CustomerID, newCustomerData);
+
+				Application.Current.MainPage.DisplayAlert("Notification", "Customer Updated!", "OK");
+			}
+
+			dbManager.WriteCustomerData(sysManagement);
+			dbManager.WriteRentalInformationData(sysManagement);
 		}
-		else
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
-			Customer newCustomerData = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
-			sysManagement.UpdateCustomer(currentCustomer.CustomerID, newCustomerData);
-
-			Application.Current.MainPage.DisplayAlert("Notification", "Customer Updated!", "OK");
+			handler.DisplayError();
 		}
-
-		dbManager.WriteCustomerData(sysManagement);
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
+		}
 	}
 
 	private void DeleteCustomerRecord()
@@ -213,22 +262,24 @@
 		try
 		{
 			sysManagement.RemoveCustomer(currentCustomer.CustomerID);
-			dbManager.WriteCustomerData(sysManagement);
+			dbManager.DeleteCustomer(currentCustomer.CustomerID);
 
 			Application.Current.MainPage.DisplayAlert("Notification", "Customer Record Deleted!", "OK");
+
+			ClearCustomerInformation();
+			ClearResult();
 		}
-		catch(SystemHandler systemHandler)
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
-			systemHandler.DisplayError();
+			handler.DisplayError();
 		}
-		finally
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
 		{
-			customerID = string.Empty;
-			firstName = string.Empty;
-			lastName = string.Empty;
-			phoneNumber = string.Empty;
-			email = string.Empty;
-			currentCustomer = null;
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
 		}
 	}
 }

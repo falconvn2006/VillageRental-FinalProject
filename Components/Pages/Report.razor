@@ -3,8 +3,9 @@
 @inject SystemManagement sysManagement
 
 
+<!-- Table layout for different kind of report -->
 <table class="table table-bordered table-light">
-	@if (ReportType == "ListAllClients")
+	@if (ReportType == "ListAllCustomers")
 	{
 		<thead>
 			<tr>
@@ -35,8 +36,8 @@
 		<thead>
 			<tr>
 				<th scope="col">Id</th>
-				<th scope="col">Category Id</th>
 				<th scope="col">Name</th>
+				<th scope="col">Category</th>
 				<th scope="col">Description</th>
 				<th scope="col">Daily Rate</th>
 				<th scope="col">Quantity</th>
@@ -48,8 +49,8 @@
 			{
 				<tr>
 					<th scope="row">@equipment.EquipmentID</th>
-					<td>@equipment.CategoryID</td>
 					<td>@equipment.Name</td>
+					<td>@sysManagement.FindCategory(equipment.CategoryID).Description</td>
 					<td>@equipment.Description</td>
 					<td>@equipment.DailyRentalCost</td>
 					<td>@equipment.AvailableQuantity</td>
@@ -64,6 +65,7 @@
 			<tr>
 				<th scope="col">Id</th>
 				<th scope="col">Description</th>
+				<th scope="col"># of equipment in category</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -72,6 +74,7 @@
 				<tr>
 					<th scope="row">@item.CategoryID</th>
 					<td>@item.Description</td>
+					<td>@sysManagement.equipmentList.Count((equipment) => equipment.CategoryID == item.CategoryID)</td>
 				</tr>
 			}
 		</tbody>

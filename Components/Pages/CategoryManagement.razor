@@ -7,6 +7,7 @@
 <h1 class="text-center">Category Management</h1>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
+	<!-- Search section -->
 	<div class="bg-secondary p-4 rounded-2">
 		<h3 class="text-center">Category List</h3>
 		<div class="text-center">
@@ -28,18 +29,28 @@
 	</div>
 
 	<div class="bg-secondary p-3 rounded-2 flex-fill">
+		<!-- Create / Edit section -->
 		<h3 class="text-center">Customer Information</h3>
 		<div>
 			<div class="mb-3 row">
 				<label for="categoryID" class="col-sm-3 col-form-label">Category ID</label>
-				<div class="col-sm-9">
-					<input type="text" class="form-control" id="categoryID" @bind="categoryID" />
-				</div>
+				@if(currentCategory == null)
+				{
+					<div class="col-sm-9">
+						<input type="text" class="form-control" id="categoryID" placeholder="Enter an ID for the category" @bind="categoryID" />
+					</div>
+				}
+				else
+				{
+					<div class="col-sm-9">
+						<input type="text" class="form-control" id="categoryID" placeholder="Enter an ID for the category" @bind="categoryID" disabled />
+					</div>
+				}
 			</div>
 			<div class="mb-3 row">
 				<label for="description" class="col-sm-3 col-form-label">Category Description</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="description" @bind="description" />
+					<input type="text" class="form-control" id="description" placeholder="Enter a description for the category" @bind="description" />
 				</div>
 			</div>
 			</div>
@@ -68,6 +79,7 @@
 
 	private CategoryItem? currentCategory;
 
+	// Binding
 	private string categoryID, description;
 
 	private void SetCurrentCategory(CategoryItem _item)
@@ -87,30 +99,47 @@
 	{
 		if (string.IsNullOrEmpty(categoryID) || string.IsNullOrEmpty(description))
 		{
-			currentCategory = null;		
+			Application.Current.MainPage.DisplayAlert("Notification", "Category ID and Description cannot be empty!", "OK");
+
+			currentCategory = null;
 			return;
 		}
 
-		if (currentCategory == null)
+		try
 		{
-			CategoryItem newCategoryItem = new CategoryItem(Convert.ToInt32(categoryID), description);
-			sysManagement.AddNewCategory(newCategoryItem);
+			// If there isn't any category selected from the category list
+			// Means that we are creating a new category
+			if (currentCategory == null)
+			{
+				CategoryItem newCategoryItem = new CategoryItem(Convert.ToInt32(categoryID), description);
+				sysManagement.AddNewCategory(newCategoryItem);
 
-			Application.Current.MainPage.DisplayAlert("Notification", "Category Created!", "OK");
+				Application.Current.MainPage.DisplayAlert("Notification", "Category Created!", "OK");
 
-			categoryID = string.Empty;
-			description = string.Empty;
-			currentCategory = null;
+				ClearCategoryInformation();
+			}
+			else
+			{
+				CategoryItem newCategoryItemData = new CategoryItem(Convert.ToInt32(categoryID), description);
+				sysManagement.UpdateCategory(currentCategory.CategoryID, newCategoryItemData);
+
+				Application.Current.MainPage.DisplayAlert("Notification", "Category Updated!", "OK");
+			}
+
+			dbManager.WriteCategoryData(sysManagement);
 		}
-		else
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
-			CategoryItem newCategoryItemData = new CategoryItem(Convert.ToInt32(categoryID), description);
-			sysManagement.UpdateCategory(currentCategory.CategoryID, newCategoryItemData);
-
-			Application.Current.MainPage.DisplayAlert("Notification", "Category Updated!", "OK");
+			handler.DisplayError();
 		}
-
-		dbManager.WriteCategoryData(sysManagement);
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
+		}
 	}
 
 	private void DeleteCategoryRecord()
@@ -120,20 +149,24 @@
 
 		try
 		{
-			sysManagement.RemoveCategory(currentCategory.CategoryID);	
-			dbManager.WriteCategoryData(sysManagement);
+			sysManagement.RemoveCategory(currentCategory.CategoryID);
+			dbManager.DeleteCategory(currentCategory.CategoryID);
 
 			Application.Current.MainPage.DisplayAlert("Notification", "Category Record Deleted!", "OK");
+
+			ClearCategoryInformation();
 		}
-		catch(SystemHandler systemHandler)
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
-			systemHandler.DisplayError();
+			handler.DisplayError();
 		}
-		finally
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
 		{
-			categoryID = string.Empty;
-			description = string.Empty;
-			currentCategory = null;	
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
 		}
 	}
 }

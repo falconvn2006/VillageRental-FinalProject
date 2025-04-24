@@ -16,6 +16,7 @@
 				<option selected value="EquipmentID">Equipment ID</option>
 				<option value="CategoryID">Category ID</option>
 				<option value="Name">Name</option>
+				<option value="SearchAll">Search All</option>
 			</select>
 		</div>
 		<hr />
@@ -32,7 +33,7 @@
 				}
 				<p>@searchResult</p>
 			</div>
-			<button class="btn btn-primary mt-3">
+			<button class="btn btn-primary mt-3" @onclick="ClearSearchResult">
 				Clear Result
 			</button>
 		</div>
@@ -43,56 +44,66 @@
 		<div>
 			<div class="mb-3 row">
 				<label for="equipmentID" class="col-sm-3 col-form-label">Equipment ID</label>
-				<div class="col-sm-9">
-					<input type="text" class="form-control" id="equipmentID" @bind="equipmentID" />
-				</div>
+				@if(currentEquipment == null)
+				{
+					<div class="col-sm-9">
+						<input type="text" class="form-control" id="equipmentID" placeholder="Enter an ID for the equipment" @bind="equipmentID" />
+					</div>
+				}
+				else
+				{
+					<div class="col-sm-9">
+						<input type="text" class="form-control" id="equipmentID" placeholder="Enter an ID for the equipment" @bind="equipmentID" disabled />
+					</div>
+				}
 			</div>
 			<div class="mb-3 row">
 				<label for="categoryID" class="col-sm-3 col-form-label">Category ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="categoryID" value="@categoryID" @onchange="(ChangeEventArgs __e) => {
-							categoryID = __e.Value.ToString();
-							UpdateCategoryText();
-						}" 
-					/>
+					<select class="form-select" @bind="categoryID">
+						<option value="" selected disabled>Select a category for the equipment</option>
+						@foreach(CategoryItem category in sysManagement.categoryList)
+						{
+							<option value="@category.CategoryID">@($"Category ID: {category.CategoryID} | Description: {category.Description}")</option>
+						}
+					</select>
 				</div>
 			</div>
-			<p>Category Description: @equipmentCategoryText</p>
 			<div class="mb-3 row">
 				<label for="name" class="col-sm-3 col-form-label">Name</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="name" @bind="name" />
+					<input type="text" class="form-control" id="name" placeholder="Enter a name for the equipment" @bind="name" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="description" class="col-sm-3 col-form-label">Description</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="description" @bind="description" />
+					<input type="text" class="form-control" id="description" placeholder="Enter an description for the equipment" @bind="description" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="dailyRentalCost" class="col-sm-3 col-form-label">Daily Rental Cost</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="dailyRentalCost" @bind="dailyRentalCost" />
+					<input type="text" class="form-control" id="dailyRentalCost" placeholder="Enter the cost per day for the equipment (ex: 12,99)" @bind="dailyRentalCost" />
 				</div>
 			</div>
 			<div class="mb-3 row">
 				<label for="quantity" class="col-sm-3 col-form-label">Quantity</label>
 				<div class="col-sm-9">
-					<input type="number" class="form-control" id="quantity" @bind="quantity" />
+					<input type="number" min="0" class="form-control" id="quantity" @bind="quantity" />
 				</div>
 			</div>
 			<div class="mb-3 row">
-				<label for="equipmentStatus" class="col-sm-3 col-form-label">equipmentStatus</label>
+				<label for="equipmentStatus" class="col-sm-3 col-form-label">Equipment Status</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="equipmentStatus" @bind="equipmentStatus" />
+					<input type="text" class="form-control" id="equipmentStatus" placeholder="Enter the status of the equipment (Good, Damaged,...)" @bind="equipmentStatus" />
 				</div>
 			</div>
 			<div class="container gap-4 text-center">
 				<div class="row">
 					<div class="col">
 						<button class="btn btn-primary" @onclick="CreateEquipment">Save</button>
-						<button class="btn btn-primary" @onclick="() => { ClearSearchResult(); ClearEquipmentInfo(); }">Clear</button>
+						<button class="btn btn-primary" @onclick="ClearEquipmentInfo">Clear</button>
 					</div>
 				</div>
 				<div class="row mt-2">
@@ -106,6 +117,7 @@
 	</div>
 </div>
 
+<!-- HTML code for displaying a modal for the admin to sell their equipment -->
 @if (showModal)
 {
 	<div class="modal fade show" id="exampleModal" tabindex="-1" style="display: block; background: #00000080;">
@@ -126,7 +138,7 @@
 						</div>
 						<div class="row mt-2">
 							<div class="col">
-								<p>Category: @equipmentCategoryText</p>
+								<p>Category: @sysManagement.FindCategory(currentEquipment.CategoryID).Description</p>
 								<p>Daily Rental Cost: @dailyRentalCost</p>
 								<p>Equipment Status: @equipmentStatus</p>
 							</div>
@@ -160,33 +172,25 @@
 	private Equipment? currentEquipment;
 	private List<Equipment> equipmentSearchResultList = new List<Equipment>();
 
-	private string equipmentCategoryText = "";
-	private string notFoundCategoryMessage = "Category Not Found in Category List";
-
 	private string equipmentID, categoryID, name, description, dailyRentalCost, quantity, equipmentStatus;
 	private string priceToSell;
 
 	private void ClearSearchResult()
 	{
-		equipmentSearchResultList = new List<Equipment>();
+		equipmentSearchResultList.Clear();
 		currentEquipment = null;
 	}
 
-	private void UpdateCategoryText()
+	private void ClearEquipmentInfo()
 	{
-		if (!string.IsNullOrEmpty(categoryID))
-		{
-			CategoryItem getCategory = sysManagement.FindCategory(Convert.ToInt32(categoryID));
-
-			if (getCategory != null)
-				equipmentCategoryText = getCategory.Description;
-			else
-				equipmentCategoryText = notFoundCategoryMessage;
-		}
-		else
-		{
-			equipmentCategoryText = string.Empty;
-		}
+		equipmentID = string.Empty;
+		categoryID = string.Empty;
+		name = string.Empty;
+		description = string.Empty;
+		dailyRentalCost = string.Empty;
+		quantity = string.Empty;
+		equipmentStatus = string.Empty;
+		currentEquipment = null;
 	}
 
 	private void SetCurrentEquipment(Equipment _currentEquipment)
@@ -202,15 +206,14 @@
 		equipmentStatus = currentEquipment.EquipmentStatus.ToString();
 
 		showModal = false;
-
-		UpdateCategoryText();
 	}
 
 	private void FindEquipment()
 	{
-		if (string.IsNullOrEmpty(searchEquipmentFieldValue))
+		if (string.IsNullOrEmpty(searchEquipmentFieldValue) && searchFilter != "SearchAll")
 			return;
 
+		// Get the search result using different finding functions in the System Management class
 		switch(searchFilter)
 		{
 			case "EquipmentID":
@@ -222,89 +225,92 @@
 			case "Name":
 				equipmentSearchResultList = sysManagement.FindEquipmentMultipleResultByName(searchEquipmentFieldValue);
 				break;
+			case "SearchAll":
+				equipmentSearchResultList = sysManagement.equipmentList.ToList();
+				break;
 			default:
 				break;
 		}
 
 		if(equipmentSearchResultList.Count == 0)
-		{
 			searchResult = "Not Found!";
-		}
 		else
-		{
 			searchResult = "";
-		}
 	}
 
 	private void CreateEquipment()
 	{
+		// If any of the field is null don't execute the function
 		if (string.IsNullOrEmpty(equipmentID) || string.IsNullOrEmpty(categoryID) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(dailyRentalCost) || string.IsNullOrEmpty(quantity) || string.IsNullOrEmpty(equipmentStatus))
 		{
 			currentEquipment = null;		
 			return;
 		}	
 
-		if(currentEquipment == null)
+		try
 		{
-			Equipment newEquipment = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
-			sysManagement.AddEquipmentToList(newEquipment);
+			// If there isn't any equipment selected from the search result
+			// Means that we are creating a new equipment
+			if (currentEquipment == null)
+			{
+				Equipment newEquipment = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
+				sysManagement.AddEquipmentToList(newEquipment);
 
-			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Created!", "OK");
+				Application.Current.MainPage.DisplayAlert("Notification", "Equipment Created!", "OK");
 
-			equipmentID = string.Empty;
-			categoryID = string.Empty;
-			name = string.Empty;
-			description = string.Empty;
-			dailyRentalCost = string.Empty;
-			quantity = string.Empty;
-			equipmentStatus = string.Empty;
-			currentEquipment = null;
+				ClearEquipmentInfo();
+			}
+			else
+			{
+				Equipment newEquipmentData = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
+				sysManagement.UpdateEquipment(currentEquipment.EquipmentID, newEquipmentData);
+
+				Application.Current.MainPage.DisplayAlert("Notification", "Equipment Updated!", "OK");
+			}
+
+			dbManager.WriteEquipmentData(sysManagement);
 		}
-		else
+		// Display any exception that we might have expected
+		catch(SystemHandler handler)
 		{
-			Equipment newEquipmentData = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
-			sysManagement.UpdateEquipment(currentEquipment.EquipmentID, newEquipmentData);
-
-			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Updated!", "OK");
+			handler.DisplayError();
 		}
-
-		dbManager.WriteEquipmentData(sysManagement);
-	}
-
-	private void ClearEquipmentInfo()
-	{
-		equipmentID = string.Empty;
-		categoryID = string.Empty;
-		name = string.Empty;
-		description = string.Empty;
-		dailyRentalCost = string.Empty;
-		quantity = string.Empty;
-		equipmentStatus = string.Empty;
-		currentEquipment = null;
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch(Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
+		}
 	}
 
 	private void RemoveFromInventory()
 	{
-		equipmentID = string.Empty;
-		categoryID = string.Empty;
-		name = string.Empty;
-		description = string.Empty;
-		dailyRentalCost = string.Empty;
-		quantity = string.Empty;
-		equipmentStatus = string.Empty;
+		if (currentEquipment == null)
+			return;
 
 		try
 		{
+			// Remove the equipment from the equipment list in the System Management
 			sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
+			// Then delete it from the database
+			dbManager.DeleteEquipment(currentEquipment.EquipmentID);
 
-			dbManager.WriteEquipmentData(sysManagement);
+			ClearEquipmentInfo();
+			ClearSearchResult();
 		}
-		catch(SystemHandler systemHandler)
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
-			systemHandler.DisplayError();
+			handler.DisplayError();
 		}
-
-		currentEquipment = null;
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
+		}
 	}
 
 	private void ShowSellModal()
@@ -332,17 +338,24 @@
 
 			sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
 
-			dbManager.WriteEquipmentData(sysManagement);
+			dbManager.DeleteEquipment(currentEquipment.EquipmentID);
 
 			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Sold!", "OK");
-		}
-		catch(SystemHandler systemHandler)
-		{
-			systemHandler.DisplayError();
-		}
-		finally
-		{
+
 			ClearEquipmentInfo();
+			ClearSearchResult();
+		}
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
+		{
+			handler.DisplayError();
+		}
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
 		}
 	}
 }

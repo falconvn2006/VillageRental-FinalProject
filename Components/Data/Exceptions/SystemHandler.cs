@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VillageRental.Components.Data.Exceptions
+﻿namespace VillageRental.Components.Data.Exceptions
 {
 	class SystemHandler : Exception
 	{
@@ -12,6 +6,11 @@ namespace VillageRental.Components.Data.Exceptions
         public string Message { get; set; }
 
         public SystemHandler() : base() { }
+
+		public SystemHandler(string message) : base(message)
+		{
+			Message = message;
+		}
 
 		public SystemHandler(int errorCode, string message) : base(message) 
 		{
@@ -27,7 +26,10 @@ namespace VillageRental.Components.Data.Exceptions
 
 		public void DisplayError()
 		{
-			Application.Current.MainPage.DisplayAlert("Error encounter!", $"{ErrorCode}: {Message}", "OK");
+			if(ErrorCode != 0)
+				Application.Current.MainPage.DisplayAlert("Error encounter!", $"{ErrorCode}: {Message}", "OK");
+			else
+				Application.Current.MainPage.DisplayAlert("Error encounter!", $"{Message}", "OK");
 		}
 	}
 }

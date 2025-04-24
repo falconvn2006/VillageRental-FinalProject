@@ -9,17 +9,34 @@
 
 Welcome to Village Rentals. Where you will manage your customer data, equipment data and create rentals
 
-<p>The application is currently storing it's data in this path:</p>
-<p>"@applicationStoragePath"</p>
+<div class="d-flex justify-content-around mt-2">
+	<div class="bg-primary text-white p-3 text-wrap rounded-2" style="width: 12rem;">
+		<p class="fs-4">Customers not banned</p>
+		<p class="fs-2">@sysManagement.customerList.Count((cust) => !cust.isBanned)</p>
+	</div>
+	<div class="bg-primary text-white p-3 text-wrap rounded-2" style="width: 12rem;">
+		<p class="fs-4">Equipments in stock</p>
+		<p class="fs-2">@sysManagement.equipmentList.Count((equip) => equip.AvailableQuantity > 0)</p>
+	</div>
+	<div class="bg-primary text-white p-3 text-wrap rounded-2" style="width: 12rem;">
+		<p class="fs-4">Rental Records</p>
+		<p class="fs-2">@sysManagement.rentalInformationList.Count()</p>
+	</div>
+</div>
 
-<p>Loaded @sysManagement.customerList.Count customers into the system</p>
-<p>Loaded @sysManagement.equipmentList.Count equipments into the system</p>
-<p>Loaded @sysManagement.categoryList.Count category into the system</p>
-<p>Loaded @sysManagement.rentalInformationList.Count rental informations into the system</p>
+<div class="d-flex justify-content-around mt-2">
+	<div class="bg-warning text-white p-3 text-wrap rounded-2" style="width: 12rem;">
+		<p class="fs-4">Total customers</p>
+		<p class="fs-2">@sysManagement.customerList.Count()</p>
+	</div>
+	<div class="bg-warning text-white p-3 text-wrap rounded-2" style="width: 12rem;">
+		<p class="fs-4">Total equipments</p>
+		<p class="fs-2">@sysManagement.equipmentList.Count()</p>
+	</div>
+</div>
 
 @code{
-	private string applicationStoragePath = FileSystem.Current.AppDataDirectory;
-
+	// Load every time the page is on
 	protected override void OnInitialized()
 	{
 		if (dbManager.loadOnStart)
@@ -27,15 +44,17 @@ Welcome to Village Rentals. Where you will manage your customer data, equipment 
 
 		try
 		{
-			dbManager.LoadCategory(sysManagement, DataFilePath.fileCategoryPath);
-			dbManager.LoadCustomer(sysManagement, DataFilePath.fileCustomerPath);
-			dbManager.LoadEquipment(sysManagement, DataFilePath.fileEquipmentPath);
-			dbManager.LoadRentalInformation(sysManagement, DataFilePath.fileRentalInformationPath);
+			dbManager.LoadAll(sysManagement);
 			dbManager.loadOnStart = true;
 		}
 		catch (SystemHandler systemHandler)
 		{
 			systemHandler.DisplayError();
+		}
+		catch(Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
 		}
 	}
 }

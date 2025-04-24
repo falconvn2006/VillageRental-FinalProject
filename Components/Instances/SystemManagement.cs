@@ -3,27 +3,8 @@ using VillageRental.Components.Data.Exceptions;
 
 namespace VillageRental.Components.Instances
 {
-    public static class ExampleData
-    {
-		public static string CategoryContent = "10;Power tools\r\n20;Yard equipment\r\n30;Compressors\r\n40;Generators\r\n50;Air Tools";
-        public static string RentalInformationContent = "1000;15/02/2024;1001;201;20/02/2024;23/02/2024;149,97;1;Renting\r\n1001;16/02/2024;1002;501;21/02/2024;25/02/2024;43,96;1;Renting";
-        public static string CustomerContent = "1001;Doe;John;(555) 555-1212;jd@sample.net;False\r\n1002;Smith;Jane;(555) 555-3434;js@live.com;False\r\n1003;Lee;Michael;(555) 555-5656;ml@sample.net;False";
-        public static string EquipmentContent = "101;10;Hammer drill;Powerful drill for concrete and masonry;25,99;1;Good\r\n201;20;Chainsaw;Gas-powered chainsaw for cutting wood;49,99;1;Good\r\n202;20;Lawn mower;Self-propelled lawn mower with mulching function;19,99;1;Good\r\n301;30;Small Compressor;5 Gallon Compressor-Portable;14,99;1;Good\r\n501;50;Brad Nailer;Brad Nailer. Requires 3/4 to 1 1/2 Brad Nails;10,99;1;Good";
-    }
-
-    public static class DataFilePath
-    {
-		public static string fileCategoryPath = FileSystem.Current.AppDataDirectory + "\\category.txt";
-		public static string fileRentalInformationPath = FileSystem.Current.AppDataDirectory + "\\rental_information.txt";
-		public static string fileCustomerPath = FileSystem.Current.AppDataDirectory + "\\customer.txt";
-		public static string fileEquipmentPath = FileSystem.Current.AppDataDirectory + "\\equipment.txt";
-	}
-
-
     public class SystemManagement
     {
-        public bool writeExampleDataIfNotExits = true;
-
         public List<Customer> customerList;
         public List<Equipment> equipmentList;
         public List<CategoryItem> categoryList;
@@ -35,28 +16,51 @@ namespace VillageRental.Components.Instances
             equipmentList = new List<Equipment>();
             categoryList = new List<CategoryItem>();
             rentalInformationList = new List<RentalInformation>();
-
-            if(writeExampleDataIfNotExits)
-                WriteExampleData(false);
         }
 
 
         #region Customer Management Functions
+
+        /// <summary>
+        /// Add a new customer object to the system list, but only if there isn't already a customer with the ID already in there
+        /// </summary>
+        /// <param name="_customer"></param>
+        /// <exception cref="SystemHandler"></exception>
         public void AddCustomerToList(Customer _customer)
         {
+            if (FindCustomer(_customer.CustomerID) != null)
+                throw new SystemHandler("Customer with that ID already exists!");
+
             customerList.Add(_customer);
         }
 
+        /// <summary>
+        /// Update the customer with this ID to a new data
+        /// </summary>
+        /// <param name="_customerId"></param>
+        /// <param name="_newCustomerData"></param>
         public void UpdateCustomer(int _customerId, Customer _newCustomerData)
         {
             Customer customerFound = FindCustomer(_customerId);
 
             if (customerFound != null)
             {
-                customerFound.UpdateCustomer(_newCustomerData.CustomerID, _newCustomerData.LastName, _newCustomerData.FirstName, _newCustomerData.PhoneNumber, _newCustomerData.Email);
+                customerFound.UpdateCustomer(_newCustomerData);
+                foreach (RentalInformation information in rentalInformationList)
+                {
+                    if (information.CustomerID == _customerId)
+                    {
+                        information.CustomerLastName = _newCustomerData.LastName;
+                    }
+                }
             }
         }
 
+        /// <summary>
+        /// Find a single customer with this ID
+        /// </summary>
+        /// <param name="_customerId"></param>
+        /// <returns></returns>
         public Customer FindCustomer(int _customerId)
         {
             foreach (Customer customer in customerList)
@@ -70,6 +74,11 @@ namespace VillageRental.Components.Instances
             return null;
         }
 
+        /// <summary>
+        /// Find multiple customer with this id
+        /// </summary>
+        /// <param name="_customerId"></param>
+        /// <returns></returns>
         public List<Customer> FindCustomerMultipleResult(int _customerId)
         {
             List<Customer> customerResultList = new List<Customer>();
@@ -85,6 +94,11 @@ namespace VillageRental.Components.Instances
             return customerResultList;
         }
 
+        /// <summary>
+        /// Find multiple customer with this last name
+        /// </summary>
+        /// <param name="_lastName"></param>
+        /// <returns></returns>
         public List<Customer> FindCustomerMultipleResultByLastName(string _lastName)
         {
             List<Customer> customerResultList = new List<Customer>();
@@ -100,6 +114,11 @@ namespace VillageRental.Components.Instances
             return customerResultList;
         }
 
+        /// <summary>
+        /// Find multiple customer with this email
+        /// </summary>
+        /// <param name="_email"></param>
+        /// <returns></returns>
         public List<Customer> FindCustomerMultipleResultByEmail(string _email)
         {
             List<Customer> customerResultList = new List<Customer>();
@@ -115,6 +134,11 @@ namespace VillageRental.Components.Instances
             return customerResultList;
         }
 
+        /// <summary>
+        /// Remove the customer with this ID from the system list, only when there isn't any rental information with that customer
+        /// </summary>
+        /// <param name="_customerId"></param>
+        /// <exception cref="SystemHandler"></exception>
         public void RemoveCustomer(int _customerId)
         {
 			foreach (RentalInformation rentalInformation in rentalInformationList)
@@ -130,6 +154,10 @@ namespace VillageRental.Components.Instances
             }
         }
 
+        /// <summary>
+        /// Ban a customer with this ID
+        /// </summary>
+        /// <param name="_customerId"></param>
         public void BanCustomer(int _customerId)
         {
             Customer customerFound = FindCustomer(_customerId);
@@ -137,15 +165,40 @@ namespace VillageRental.Components.Instances
                 customerFound.SetBan(true);
         }
 
+        public void UnbanCustomer(int _customerId)
+        {
+            Customer customerFound = FindCustomer(_customerId);
+            if(customerFound != null)
+                customerFound.SetBan(false);
+        }
+
         #endregion
 
         #region Equipment Management Functions
 
+        /// <summary>
+        /// Add a new equipment object into the system list, but addition can only happen when there isn't any equipment with this ID
+        /// and the category of the equipment must exists in the category list
+        /// </summary>
+        /// <param name="_equipment"></param>
+        /// <exception cref="SystemHandler"></exception>
         public void AddEquipmentToList(Equipment _equipment)
         {
+            if (FindEquipment(_equipment.EquipmentID) != null)
+                throw new SystemHandler("Equipment with that ID already exists!");
+
+            if (FindCategory(_equipment.CategoryID) == null)
+                throw new SystemHandler("Cannot add equipment with a non existing category to list!");
+
             equipmentList.Add(_equipment);
         }
 
+        /// <summary>
+        /// Remove the equipment from the system but removal can only happens if there isn't any
+        /// rental information with a rental item that have this equipment
+        /// </summary>
+        /// <param name="_equipmentID"></param>
+        /// <exception cref="SystemHandler"></exception>
         public void RemoveEquipmentFromInventory(int _equipmentID)
         {
 			foreach (RentalInformation rentalInformation in rentalInformationList)
@@ -164,9 +217,19 @@ namespace VillageRental.Components.Instances
                 equipmentList.Remove(equipmentFound);
         }
 
+        /// <summary>
+        /// Update the equipment with this ID with new data, but only if the new data category
+        /// exists in the category list
+        /// </summary>
+        /// <param name="_equipmentID"></param>
+        /// <param name="_newEquipmentData"></param>
+        /// <exception cref="SystemHandler"></exception>
         public void UpdateEquipment(int _equipmentID, Equipment _newEquipmentData)
         {
-            Equipment equipmentToUpdate = FindEquipment(_equipmentID);
+            if (FindCategory(_newEquipmentData.CategoryID) == null)
+				throw new SystemHandler("Cannot update equipment with a non existing category to list!");
+
+			Equipment equipmentToUpdate = FindEquipment(_equipmentID);
 
             if(equipmentToUpdate != null)
             {
@@ -174,6 +237,11 @@ namespace VillageRental.Components.Instances
             }
         }
 
+        /// <summary>
+        /// Find a single equipment with this ID
+        /// </summary>
+        /// <param name="_equipmentID"></param>
+        /// <returns></returns>
         public Equipment FindEquipment(int _equipmentID)
         {
             foreach (Equipment equipment in equipmentList)
@@ -185,6 +253,11 @@ namespace VillageRental.Components.Instances
             return null;
         }
 
+        /// <summary>
+        /// Find multiple equipment with this ID
+        /// </summary>
+        /// <param name="_equipmentID"></param>
+        /// <returns></returns>
         public List<Equipment> FindEquipmentMultipleResult(int _equipmentID)
         {
             List<Equipment> result = new List<Equipment>();
@@ -197,6 +270,11 @@ namespace VillageRental.Components.Instances
             return result;
         }
 
+        /// <summary>
+        /// Find multiple equipment that belongs to this category based on the category ID
+        /// </summary>
+        /// <param name="_categoryID"></param>
+        /// <returns></returns>
         public List<Equipment> FindEquipmentMultipleResultByCategoryID(int _categoryID)
         {
             List<Equipment> result = new List<Equipment> ();
@@ -209,6 +287,11 @@ namespace VillageRental.Components.Instances
             return result;
         }
 
+        /// <summary>
+        /// Find multiple equipment with this name
+        /// </summary>
+        /// <param name="_name"></param>
+        /// <returns></returns>
         public List<Equipment> FindEquipmentMultipleResultByName(string _name)
         {
             List<Equipment> result = new List<Equipment>();
@@ -225,11 +308,25 @@ namespace VillageRental.Components.Instances
 
         #region Category Management Functions
 
+        /// <summary>
+        /// Add a new category object to the system, but only if there isn't any category with that
+        /// id already exists
+        /// </summary>
+        /// <param name="_newCategoryItem"></param>
+        /// <exception cref="SystemHandler"></exception>
         public void AddNewCategory(CategoryItem _newCategoryItem)
         {
+            if (FindCategory(_newCategoryItem.CategoryID) != null)
+                throw new SystemHandler("Category with that ID already exists!");
+
             categoryList.Add(_newCategoryItem);
         }
 
+        /// <summary>
+        /// Remove the category with this ID, but only if there isn't any equipment with that category
+        /// </summary>
+        /// <param name="_categoryID"></param>
+        /// <exception cref="SystemHandler"></exception>
         public void RemoveCategory(int _categoryID)
         {
             foreach(Equipment equipment in equipmentList)
@@ -238,28 +335,27 @@ namespace VillageRental.Components.Instances
                     throw new SystemHandler(304, "There is an existing equipment with this category ID. Deletion cannot perform.");
             }
 
-            foreach(RentalInformation rentalInformation in rentalInformationList)
-            {
-                foreach(RentalItem rentalItem in rentalInformation.rentalItemList)
-                {
-                    if (FindEquipment(rentalItem.EquipmentID).CategoryID == _categoryID)
-                        throw new SystemHandler(303, "There is an existing rental information with an equipment that has this category ID. Deletion cannot perform.");
-                }
-            }
-
-
             CategoryItem categoryFound = FindCategory(_categoryID);
             if(categoryFound != null)
                 categoryList.Remove(categoryFound);
         }
 
+        /// <summary>
+        /// Update the category with this ID with the new category data
+        /// </summary>
+        /// <param name="_categoryID"></param>
+        /// <param name="_newCategoryData"></param>
         public void UpdateCategory(int _categoryID, CategoryItem _newCategoryData)
         {
             CategoryItem categoryToChange = FindCategory(_categoryID);
-            categoryToChange.CategoryID = _newCategoryData.CategoryID;
             categoryToChange.Description = _newCategoryData.Description;
         }
 
+        /// <summary>
+        /// Find a single category with this ID
+        /// </summary>
+        /// <param name="_categoryID"></param>
+        /// <returns></returns>
         public CategoryItem FindCategory(int _categoryID)
         {
             foreach(CategoryItem categoryItem in categoryList)
@@ -271,13 +367,40 @@ namespace VillageRental.Components.Instances
             return null;
         }
 
-        #endregion
+		#endregion
 
-        public void RentItem(RentalInformation _rentalInformation)
+		#region Rental Management Functions
+
+        /// <summary>
+        /// Add a new rental information into the system list, but only if there isn't any
+        /// rental information with that ID already exists
+        /// </summary>
+        /// <param name="_rentalInformation"></param>
+        /// <exception cref="SystemHandler"></exception>
+		public void RentItem(RentalInformation _rentalInformation)
         {
+            if (FindRentalInformation(_rentalInformation.RentalID) != null)
+                throw new SystemHandler("Rental Information with that ID already exists!");
+
             rentalInformationList.Add(_rentalInformation);
         }
 
+        /// <summary>
+        /// Remove the rental information with that ID from the system list
+        /// </summary>
+        /// <param name="_rentalId"></param>
+        public void RemoveRentalInformation(int _rentalId)
+        {
+            RentalInformation informationToRemmove = FindRentalInformation(_rentalId);
+
+            rentalInformationList.Remove(informationToRemmove);
+        }
+
+        /// <summary>
+        /// Find a single rental information with that rental ID
+        /// </summary>
+        /// <param name="_rentalId"></param>
+        /// <returns></returns>
         public RentalInformation FindRentalInformation(int _rentalId)
         {
             foreach(RentalInformation information in  rentalInformationList)
@@ -290,23 +413,6 @@ namespace VillageRental.Components.Instances
             return null;
         }
 
-        private void WriteExampleData(bool overwriteOnStart)
-        {
-            if(!File.Exists(DataFilePath.fileCategoryPath) || overwriteOnStart)
-		        using (StreamWriter stream = File.CreateText(DataFilePath.fileCategoryPath))
-                    stream.Write(ExampleData.CategoryContent);
-
-            if(!File.Exists(DataFilePath.fileCustomerPath) || overwriteOnStart)
-			    using (StreamWriter stream = File.CreateText(DataFilePath.fileCustomerPath))
-				    stream.Write(ExampleData.CustomerContent);
-
-            if(!File.Exists(DataFilePath.fileEquipmentPath) || overwriteOnStart)
-		        using (StreamWriter stream = File.CreateText(DataFilePath.fileEquipmentPath))
-			        stream.Write(ExampleData.EquipmentContent);
-
-            if(!File.Exists(DataFilePath.fileRentalInformationPath) || overwriteOnStart)
-				using (StreamWriter stream = File.CreateText(DataFilePath.fileRentalInformationPath))
-					stream.Write(ExampleData.RentalInformationContent);
-		}
+		#endregion
 	}
 }
