@@ -7,6 +7,7 @@
 <h1 class="text-center">Category Management</h1>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
+	<!-- Search section -->
 	<div class="bg-secondary p-4 rounded-2">
 		<h3 class="text-center">Category List</h3>
 		<div class="text-center">
@@ -28,6 +29,7 @@
 	</div>
 
 	<div class="bg-secondary p-3 rounded-2 flex-fill">
+		<!-- Create / Edit section -->
 		<h3 class="text-center">Customer Information</h3>
 		<div>
 			<div class="mb-3 row">
@@ -77,6 +79,7 @@
 
 	private CategoryItem? currentCategory;
 
+	// Binding
 	private string categoryID, description;
 
 	private void SetCurrentCategory(CategoryItem _item)
@@ -104,6 +107,8 @@
 
 		try
 		{
+			// If there isn't any category selected from the category list
+			// Means that we are creating a new category
 			if (currentCategory == null)
 			{
 				CategoryItem newCategoryItem = new CategoryItem(Convert.ToInt32(categoryID), description);
@@ -111,9 +116,7 @@
 
 				Application.Current.MainPage.DisplayAlert("Notification", "Category Created!", "OK");
 
-				categoryID = string.Empty;
-				description = string.Empty;
-				currentCategory = null;
+				ClearCategoryInformation();
 			}
 			else
 			{
@@ -125,14 +128,16 @@
 
 			dbManager.WriteCategoryData(sysManagement);
 		}
-		catch(SystemHandler handler)
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
 			handler.DisplayError();
 		}
-		catch(Exception exception)
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
 		{
 			SystemHandler handler = new SystemHandler(exception.Message);
-
 			handler.DisplayError();
 		}
 	}
@@ -148,16 +153,20 @@
 			dbManager.DeleteCategory(currentCategory.CategoryID);
 
 			Application.Current.MainPage.DisplayAlert("Notification", "Category Record Deleted!", "OK");
+
+			ClearCategoryInformation();
 		}
-		catch(SystemHandler systemHandler)
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
-			systemHandler.DisplayError();
+			handler.DisplayError();
 		}
-		finally
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
 		{
-			categoryID = string.Empty;
-			description = string.Empty;
-			currentCategory = null;	
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
 		}
 	}
 }

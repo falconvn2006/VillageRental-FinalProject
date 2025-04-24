@@ -9,6 +9,7 @@
 <h1 class="text-center">Customer Management</h1>
 
 <div class="d-flex flex-row gap-4 justify-content-between ">
+	<!-- Search section -->
 	<div class="bg-secondary p-4 rounded-2">
 		<h3 class="text-center">Search Customer</h3>
 		<div>
@@ -41,6 +42,7 @@
 	</div>
 
 	<div class="bg-secondary p-3 rounded-2 flex-fill">
+		<!-- Create / Edit customer -->
 		<h3 class="text-center">Customer Information</h3>
 		<div>
 			<div class="mb-3 row">
@@ -90,7 +92,7 @@
 				<div class="row">
 					<div class="col">
 						<button class="btn btn-primary" @onclick="CreateCustomer">Save</button>
-						<button class="btn btn-primary" @onclick="BanCustomer">Ban Customer</button>
+						<button class="btn btn-primary" @onclick="SetBanCustomer">@((currentCustomer == null || !currentCustomer.isBanned) ? "Ban Customer" : "Unban Customer")</button>
 					</div>
 				</div>
 				<div class="row mt-2">
@@ -114,6 +116,7 @@
 
 	private string searchStatus = "";
 
+	// Binding
 	private string customerID, firstName, lastName, phoneNumber, email;
 	private bool banned = false;
 
@@ -122,6 +125,7 @@
 		if (string.IsNullOrEmpty(searchFieldValue) && searchFilter != "SearchAll")
 			return;
 
+		// Get the search result using different finding functions in the System Management class
 		switch(searchFilter)
 		{
 			case "CustomerID":
@@ -175,14 +179,33 @@
 		banned = false;
 	}
 
-	private void BanCustomer()
+	private void SetBanCustomer()
 	{
 		if (currentCustomer == null)
 			return;
 
-		sysManagement.BanCustomer(currentCustomer.CustomerID);
-		dbManager.WriteCustomerData(sysManagement);
-		SetCurrentCustomer(currentCustomer);
+		try
+		{
+			if (currentCustomer.isBanned)
+				sysManagement.UnbanCustomer(currentCustomer.CustomerID);
+			else
+				sysManagement.BanCustomer(currentCustomer.CustomerID);
+
+			dbManager.WriteCustomerData(sysManagement);
+			SetCurrentCustomer(currentCustomer);
+		}
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
+		{
+			handler.DisplayError();
+		}
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
+		}
 	}
 
 	private void CreateCustomer()
@@ -195,20 +218,16 @@
 
 		try
 		{
+			// If there isn't any customer selected from the search result
+			// Means that we are creating a new customer
 			if (currentCustomer == null)
 			{
 				Customer newCustomer = new Customer(Convert.ToInt32(customerID), lastName, firstName, phoneNumber, email);
-
 				sysManagement.AddCustomerToList(newCustomer);
 
 				Application.Current.MainPage.DisplayAlert("Notification", "Customer Created!", "OK");
 
-				customerID = string.Empty;
-				firstName = string.Empty;
-				lastName = string.Empty;
-				phoneNumber = string.Empty;
-				email = string.Empty;
-				currentCustomer = null;
+				ClearCustomerInformation();
 			}
 			else
 			{
@@ -221,11 +240,14 @@
 			dbManager.WriteCustomerData(sysManagement);
 			dbManager.WriteRentalInformationData(sysManagement);
 		}
-		catch(SystemHandler handler)
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
 			handler.DisplayError();
 		}
-		catch(Exception exception)
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
 		{
 			SystemHandler handler = new SystemHandler(exception.Message);
 			handler.DisplayError();
@@ -243,21 +265,21 @@
 			dbManager.DeleteCustomer(currentCustomer.CustomerID);
 
 			Application.Current.MainPage.DisplayAlert("Notification", "Customer Record Deleted!", "OK");
-		}
-		catch(SystemHandler systemHandler)
-		{
-			systemHandler.DisplayError();
-		}
-		finally
-		{
-			customerID = string.Empty;
-			firstName = string.Empty;
-			lastName = string.Empty;
-			phoneNumber = string.Empty;
-			email = string.Empty;
-			currentCustomer = null;
 
+			ClearCustomerInformation();
 			ClearResult();
+		}
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
+		{
+			handler.DisplayError();
+		}
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
 		}
 	}
 }

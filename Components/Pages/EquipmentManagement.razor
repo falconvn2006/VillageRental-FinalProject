@@ -33,7 +33,7 @@
 				}
 				<p>@searchResult</p>
 			</div>
-			<button class="btn btn-primary mt-3">
+			<button class="btn btn-primary mt-3" @onclick="ClearSearchResult">
 				Clear Result
 			</button>
 		</div>
@@ -103,7 +103,7 @@
 				<div class="row">
 					<div class="col">
 						<button class="btn btn-primary" @onclick="CreateEquipment">Save</button>
-						<button class="btn btn-primary" @onclick="() => { ClearSearchResult(); ClearEquipmentInfo(); }">Clear</button>
+						<button class="btn btn-primary" @onclick="ClearEquipmentInfo">Clear</button>
 					</div>
 				</div>
 				<div class="row mt-2">
@@ -117,6 +117,7 @@
 	</div>
 </div>
 
+<!-- HTML code for displaying a modal for the admin to sell their equipment -->
 @if (showModal)
 {
 	<div class="modal fade show" id="exampleModal" tabindex="-1" style="display: block; background: #00000080;">
@@ -180,6 +181,18 @@
 		currentEquipment = null;
 	}
 
+	private void ClearEquipmentInfo()
+	{
+		equipmentID = string.Empty;
+		categoryID = string.Empty;
+		name = string.Empty;
+		description = string.Empty;
+		dailyRentalCost = string.Empty;
+		quantity = string.Empty;
+		equipmentStatus = string.Empty;
+		currentEquipment = null;
+	}
+
 	private void SetCurrentEquipment(Equipment _currentEquipment)
 	{
 		currentEquipment = _currentEquipment;
@@ -200,6 +213,7 @@
 		if (string.IsNullOrEmpty(searchEquipmentFieldValue) && searchFilter != "SearchAll")
 			return;
 
+		// Get the search result using different finding functions in the System Management class
 		switch(searchFilter)
 		{
 			case "EquipmentID":
@@ -219,17 +233,14 @@
 		}
 
 		if(equipmentSearchResultList.Count == 0)
-		{
 			searchResult = "Not Found!";
-		}
 		else
-		{
 			searchResult = "";
-		}
 	}
 
 	private void CreateEquipment()
 	{
+		// If any of the field is null don't execute the function
 		if (string.IsNullOrEmpty(equipmentID) || string.IsNullOrEmpty(categoryID) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(dailyRentalCost) || string.IsNullOrEmpty(quantity) || string.IsNullOrEmpty(equipmentStatus))
 		{
 			currentEquipment = null;		
@@ -238,6 +249,8 @@
 
 		try
 		{
+			// If there isn't any equipment selected from the search result
+			// Means that we are creating a new equipment
 			if (currentEquipment == null)
 			{
 				Equipment newEquipment = new Equipment(Convert.ToInt32(equipmentID), Convert.ToInt32(categoryID), name, description, Convert.ToDouble(dailyRentalCost), Convert.ToInt32(quantity), equipmentStatus);
@@ -245,14 +258,7 @@
 
 				Application.Current.MainPage.DisplayAlert("Notification", "Equipment Created!", "OK");
 
-				equipmentID = string.Empty;
-				categoryID = string.Empty;
-				name = string.Empty;
-				description = string.Empty;
-				dailyRentalCost = string.Empty;
-				quantity = string.Empty;
-				equipmentStatus = string.Empty;
-				currentEquipment = null;
+				ClearEquipmentInfo();
 			}
 			else
 			{
@@ -264,10 +270,13 @@
 
 			dbManager.WriteEquipmentData(sysManagement);
 		}
+		// Display any exception that we might have expected
 		catch(SystemHandler handler)
 		{
 			handler.DisplayError();
 		}
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
 		catch(Exception exception)
 		{
 			SystemHandler handler = new SystemHandler(exception.Message);
@@ -275,32 +284,32 @@
 		}
 	}
 
-	private void ClearEquipmentInfo()
-	{
-		equipmentID = string.Empty;
-		categoryID = string.Empty;
-		name = string.Empty;
-		description = string.Empty;
-		dailyRentalCost = string.Empty;
-		quantity = string.Empty;
-		equipmentStatus = string.Empty;
-		currentEquipment = null;
-	}
-
 	private void RemoveFromInventory()
 	{
+		if (currentEquipment == null)
+			return;
+
 		try
 		{
+			// Remove the equipment from the equipment list in the System Management
 			sysManagement.RemoveEquipmentFromInventory(currentEquipment.EquipmentID);
-
+			// Then delete it from the database
 			dbManager.DeleteEquipment(currentEquipment.EquipmentID);
 
 			ClearEquipmentInfo();
 			ClearSearchResult();
 		}
-		catch(SystemHandler systemHandler)
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
-			systemHandler.DisplayError();
+			handler.DisplayError();
+		}
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
+		{
+			SystemHandler handler = new SystemHandler(exception.Message);
+			handler.DisplayError();
 		}
 	}
 
@@ -336,11 +345,14 @@
 			ClearEquipmentInfo();
 			ClearSearchResult();
 		}
-		catch(SystemHandler systemHandler)
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
-			systemHandler.DisplayError();
+			handler.DisplayError();
 		}
-		catch(Exception exception)
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
 		{
 			SystemHandler handler = new SystemHandler(exception.Message);
 			handler.DisplayError();

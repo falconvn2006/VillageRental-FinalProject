@@ -71,7 +71,9 @@
 								<p>Quantity: @item.Quantity</p>
 							</div>
 						</div>
-						<button class="btn btn-secondary" @onclick="() => currentRentalItemList.Remove(item)">Remove</button>
+						<button class="btn btn-secondary" @onclick="() => {
+								currentRentalItemList.Remove(item);
+							}">Remove</button>
 					</div>
 				}
 			</div>
@@ -156,6 +158,10 @@
 	</div>
 </div>
 
+<!-- 
+	HTML code for displaying a modal for the admin to find the rental information
+	Find the rental information using rental id
+-->
 @if (showModal)
 {
 	<div class="modal fade show" id="exampleModal" tabindex="-1" style="display: block; background: #00000080;">
@@ -189,13 +195,16 @@
 	private RentalInformation currentRentalInformation;
 	private List<RentalItem> currentRentalItemList = new List<RentalItem>();
 
+	// Binding for rental information
 	private string rentalID, customerID, rentalStatus, totalCost;
 	private DateOnly currentDate = DateOnly.FromDateTime(DateTime.Now);
 
+	// Binding for rental item
 	private string equipmentID, rentalDate, returnDate, quantity, costOfRental;
 
 	private void Rent()
 	{
+		// Only rent if all the field is entered
 		if (string.IsNullOrEmpty(rentalID) || string.IsNullOrEmpty(customerID) || string.IsNullOrEmpty(rentalStatus))
 			return;
 
@@ -213,13 +222,17 @@
 
 		try
 		{
+			// If there isn't any rental information found from the search modal
+			// Means that we are creating a new rental information
 			if(currentRentalInformation == null)
 			{
-				currentRentalInformation = new RentalInformation(Convert.ToInt32(rentalID), currentDate.ToDateTime(TimeOnly.MinValue), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
+				RentalInformation newRentalInformation = new RentalInformation(Convert.ToInt32(rentalID), currentDate.ToDateTime(TimeOnly.MinValue), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
+				// Add each rental items into the rental information
 				foreach (RentalItem item in currentRentalItemList)
 				{
-					currentRentalInformation.AddRentalItem(item);
+					newRentalInformation.AddRentalItem(item);
 
+					// And update the equipment quantity by subtracting the available quantity with the quantity they want to rent
 					Equipment updatedEquipmentData = new Equipment(
 						item.EquipmentID,
 						sysManagement.FindEquipment(item.EquipmentID).CategoryID,
@@ -230,22 +243,20 @@
 						sysManagement.FindEquipment(item.EquipmentID).EquipmentStatus
 					);
 
-
 					sysManagement.UpdateEquipment(item.EquipmentID, updatedEquipmentData);
-
 					dbManager.WriteEquipmentData(sysManagement);
 				}
 
-				sysManagement.RentItem(currentRentalInformation);
+				sysManagement.RentItem(newRentalInformation);
 
 				Application.Current.MainPage.DisplayAlert("Notification", "Rental Information Created!", "OK");
+				ClearRentalDetails();
 			}
 			else
 			{
 				RentalInformation newRentalData = new RentalInformation(Convert.ToInt32(rentalID), currentDate.ToDateTime(TimeOnly.MinValue), Convert.ToInt32(customerID), sysManagement.FindCustomer(Convert.ToInt32(customerID)).LastName, rentalStatus);
 
 				dbManager.DeleteAllRentalItemInRentalInformation(Convert.ToInt32(rentalID));
-
 				sysManagement.FindRentalInformation(Convert.ToInt32(rentalID)).UpdateRentalInformation(newRentalData, currentRentalItemList);
 
 				Application.Current.MainPage.DisplayAlert("Notification", "Rental Information Updated!", "OK");
@@ -254,16 +265,16 @@
 
 			dbManager.WriteRentalInformationData(sysManagement);
 
-			currentRentalInformation = null;
-
-			ClearRentalDetails();
 			ClearRentalItem();
 		}
-		catch(SystemHandler handler)
+		// Display any exception that we might have expected
+		catch (SystemHandler handler)
 		{
 			handler.DisplayError();
 		}
-		catch(Exception exception)
+		// Else if there are any unexpected exception that we might encounter
+		// We pass it through the system handler and display the exception
+		catch (Exception exception)
 		{
 			SystemHandler handler = new SystemHandler(exception.Message);
 			handler.DisplayError();
@@ -291,6 +302,11 @@
 		else if(sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).AvailableQuantity < Convert.ToInt32(quantity))
 		{
 			Application.Current.MainPage.DisplayAlert("Notification", "Rental quantity is LARGER than available quantity", "OK");
+			return;
+		}
+		else if(Convert.ToInt32(quantity) <= 0)
+		{
+			Application.Current.MainPage.DisplayAlert("Notification", "Rental quantity must be larger than 0", "OK");
 			return;
 		}
 
@@ -326,7 +342,8 @@
 		if (sysManagement.FindEquipment(Convert.ToInt32(equipmentID)) == null)
 			return;
 
-		costOfRental = ((double)(Convert.ToDateTime(returnDate) - Convert.ToDateTime(rentalDate)).Days * Convert.ToInt32(quantity) * sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).DailyRentalCost).ToString();
+		double cost = (double)(Convert.ToDateTime(returnDate) - Convert.ToDateTime(rentalDate)).Days * Convert.ToInt32(quantity) * sysManagement.FindEquipment(Convert.ToInt32(equipmentID)).DailyRentalCost;
+		costOfRental = Math.Round(cost, 2).ToString();
 	}
 
 	private void UpdateTotalCost()
@@ -334,12 +351,11 @@
 		if (currentRentalItemList.Count == 0)
 			return;	
 
-
 		double _totalCost = 0.0;
 		foreach (RentalItem item in currentRentalItemList)
 			_totalCost += item.CostOfRental;
 
-		totalCost = _totalCost.ToString();
+		totalCost = Math.Round(_totalCost, 2).ToString();
 	}
 
 	private void FindRental()
@@ -360,12 +376,13 @@
 		currentDate = DateOnly.FromDateTime(currentRentalInformation.CurrentDate);
 		rentalStatus = currentRentalInformation.RentalStatus;
 
+		currentRentalItemList.Clear();
 		foreach(RentalItem item in currentRentalInformation.rentalItemList)
 		{
 			currentRentalItemList.Add(item);
 		}
 
-		UpdateRentalCost();
+		UpdateTotalCost();
 
 		showModal = false;
 		rentalIdToFind = string.Empty;
@@ -373,6 +390,7 @@
 
 	private void DeleteRentalInformation()
 	{
+		// Only remove the rental information if it is found with the search function
 		if (currentRentalInformation == null)
 			return;
 

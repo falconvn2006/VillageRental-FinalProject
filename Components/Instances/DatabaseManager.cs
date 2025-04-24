@@ -15,6 +15,13 @@ namespace VillageRental.Components.Instances
 
 		NumberFormatInfo nfi = new NumberFormatInfo();
 
+		/// <summary>
+		/// Try to connect to the a MariaDb and test the connection
+		/// </summary>
+		/// <param name="serverAddress"></param>
+		/// <param name="username"></param>
+		/// <param name="password"></param>
+		/// <param name="databaseName"></param>
 		public DatabaseManager(string serverAddress = "", string username = "", string password = "", string databaseName = "")
 		{
 			nfi.NumberDecimalSeparator = ".";
