@@ -34,7 +34,14 @@ namespace VillageRental.Components.Instances
 
             if (customerFound != null)
             {
-                customerFound.UpdateCustomer(_newCustomerData.CustomerID, _newCustomerData.LastName, _newCustomerData.FirstName, _newCustomerData.PhoneNumber, _newCustomerData.Email);
+                customerFound.UpdateCustomer(_newCustomerData);
+                foreach (RentalInformation information in rentalInformationList)
+                {
+                    if (information.CustomerID == _customerId)
+                    {
+                        information.CustomerLastName = _newCustomerData.LastName;
+                    }
+                }
             }
         }
 

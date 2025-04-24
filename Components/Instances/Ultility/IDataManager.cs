@@ -3,7 +3,13 @@
 	public interface IDataManager
 	{
 		#region Load Data
-		
+
+		/// <summary>
+		/// Load all of the category, customer, equipment, rental information all at once
+		/// </summary>
+		/// <param name="sysManagement"></param>
+		void LoadAll(SystemManagement sysManagement);
+
 		/// <summary>
 		/// Load all the categories that is saved from a file or a database into the System Management entity
 		/// </summary>
@@ -31,6 +37,12 @@
 		#endregion
 
 		#region Write Data
+
+		/// <summary>
+		/// Save all the category, customer, equipment and rental information all at once
+		/// </summary>
+		/// <param name="systemManagement"></param>
+		void WriteAll(SystemManagement systemManagement);
 
 		/// <summary>
 		/// Get all the categories in the System Management entity and write it into a database or a file

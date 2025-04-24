@@ -43,10 +43,7 @@ Welcome to Village Rentals. Where you will manage your customer data, equipment 
 
 		try
 		{
-			dbManager.LoadCategory(sysManagement);
-			dbManager.LoadCustomer(sysManagement);
-			dbManager.LoadEquipment(sysManagement);
-			dbManager.LoadRentalInformation(sysManagement);
+			dbManager.LoadAll(sysManagement);
 			dbManager.loadOnStart = true;
 		}
 		catch (SystemHandler systemHandler)

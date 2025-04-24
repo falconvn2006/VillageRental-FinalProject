@@ -16,6 +16,7 @@
 				<option selected value="EquipmentID">Equipment ID</option>
 				<option value="CategoryID">Category ID</option>
 				<option value="Name">Name</option>
+				<option value="SearchAll">Search All</option>
 			</select>
 		</div>
 		<hr />
@@ -59,14 +60,15 @@
 			<div class="mb-3 row">
 				<label for="categoryID" class="col-sm-3 col-form-label">Category ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="categoryID" placeholder="Enter the Category ID for the equipment to belong to (must be an existing category)" value="@categoryID" @onchange="(ChangeEventArgs __e) => {
-							categoryID = __e.Value.ToString();
-							UpdateCategoryText();
-						}" 
-					/>
+					<select class="form-select" @bind="categoryID">
+						<option value="" selected disabled>Select a category for the equipment</option>
+						@foreach(CategoryItem category in sysManagement.categoryList)
+						{
+							<option value="@category.CategoryID">@($"Category ID: {category.CategoryID} | Description: {category.Description}")</option>
+						}
+					</select>
 				</div>
 			</div>
-			<p>Category Description: @equipmentCategoryText</p>
 			<div class="mb-3 row">
 				<label for="name" class="col-sm-3 col-form-label">Name</label>
 				<div class="col-sm-9">
@@ -135,7 +137,7 @@
 						</div>
 						<div class="row mt-2">
 							<div class="col">
-								<p>Category: @equipmentCategoryText</p>
+								<p>Category: @sysManagement.FindCategory(currentEquipment.CategoryID).Description</p>
 								<p>Daily Rental Cost: @dailyRentalCost</p>
 								<p>Equipment Status: @equipmentStatus</p>
 							</div>
@@ -169,9 +171,6 @@
 	private Equipment? currentEquipment;
 	private List<Equipment> equipmentSearchResultList = new List<Equipment>();
 
-	private string equipmentCategoryText = "";
-	private string notFoundCategoryMessage = "Category Not Found in Category List";
-
 	private string equipmentID, categoryID, name, description, dailyRentalCost, quantity, equipmentStatus;
 	private string priceToSell;
 
@@ -179,23 +178,6 @@
 	{
 		equipmentSearchResultList.Clear();
 		currentEquipment = null;
-	}
-
-	private void UpdateCategoryText()
-	{
-		if (!string.IsNullOrEmpty(categoryID))
-		{
-			CategoryItem getCategory = sysManagement.FindCategory(Convert.ToInt32(categoryID));
-
-			if (getCategory != null)
-				equipmentCategoryText = getCategory.Description;
-			else
-				equipmentCategoryText = notFoundCategoryMessage;
-		}
-		else
-		{
-			equipmentCategoryText = string.Empty;
-		}
 	}
 
 	private void SetCurrentEquipment(Equipment _currentEquipment)
@@ -211,13 +193,11 @@
 		equipmentStatus = currentEquipment.EquipmentStatus.ToString();
 
 		showModal = false;
-
-		UpdateCategoryText();
 	}
 
 	private void FindEquipment()
 	{
-		if (string.IsNullOrEmpty(searchEquipmentFieldValue))
+		if (string.IsNullOrEmpty(searchEquipmentFieldValue) && searchFilter != "SearchAll")
 			return;
 
 		switch(searchFilter)
@@ -230,6 +210,9 @@
 				break;
 			case "Name":
 				equipmentSearchResultList = sysManagement.FindEquipmentMultipleResultByName(searchEquipmentFieldValue);
+				break;
+			case "SearchAll":
+				equipmentSearchResultList = sysManagement.equipmentList.ToList();
 				break;
 			default:
 				break;

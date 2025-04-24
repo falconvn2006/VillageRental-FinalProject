@@ -45,6 +45,15 @@ namespace VillageRental.Components.Instances
 		}
 
 		#region Load Data
+
+		public void LoadAll(SystemManagement sysManagement)
+		{
+			LoadCategory(sysManagement);
+			LoadCustomer(sysManagement);
+			LoadEquipment(sysManagement);
+			LoadRentalInformation(sysManagement);
+		}
+
 		public void LoadCategory(SystemManagement sysManagement)
 		{
 			if (!connected)
@@ -173,6 +182,14 @@ namespace VillageRental.Components.Instances
 		#endregion
 
 		#region Write Data
+
+		public void WriteAll(SystemManagement sysManagement)
+		{
+			WriteCategoryData(sysManagement);
+			WriteCustomerData(sysManagement);
+			WriteEquipmentData(sysManagement);
+			WriteRentalInformationData(sysManagement);
+		}
 
 		public void WriteCategoryData(SystemManagement sysManagement)
 		{

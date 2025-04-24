@@ -30,7 +30,13 @@
 			<div class="mb-3 row">
 				<label for="customerID" class="col-sm-3 col-form-label">Customer ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="customerID" placeholder="Enter an ID of a customer who is renting" @bind="customerID" />
+					<select class="form-select" id="customerID" @bind="customerID">
+						<option value="" selected disabled>Select a customer to rent</option>
+						@foreach(Customer customer in sysManagement.customerList)
+						{
+							<option value="@customer.CustomerID">@($"Customer Id: {customer.CustomerID} | Customer last name: {customer.LastName} " + (customer.isBanned ? "(BANNED)" : ""))</option>
+						}
+					</select>
 				</div>
 			</div>
 			<div class="mb-3 row">
@@ -93,10 +99,16 @@
 			<div class="mb-3 row">
 				<label for="equipmentID" class="col-sm-3 col-form-label">Equipment ID</label>
 				<div class="col-sm-9">
-					<input type="text" class="form-control" id="equipmentID" placeholder="Enter an ID of the equipment to rent" value="@equipmentID" @onchange="(ChangeEventArgs __e) => {
+					<select class="form-select" id="equipmentID" value="@equipmentID" @onchange="(ChangeEventArgs __e) => {
 							equipmentID = __e.Value.ToString();
 							UpdateRentalCost();
-						}" />
+						}">
+						<option value="" selected disabled>Select an equipment to add</option>
+						@foreach(Equipment equipment in sysManagement.equipmentList)
+						{
+							<option value="@equipment.EquipmentID">@($"Equipment ID: {equipment.EquipmentID} | Equipment Name: {equipment.Name} | Available Quantity: {equipment.AvailableQuantity}")</option>
+						}
+					</select>
 				</div>
 			</div>
 			<div class="mb-3 row">
@@ -182,18 +194,10 @@
 
 	private string equipmentID, rentalDate, returnDate, quantity, costOfRental;
 
-	// private Regex regexDate = new Regex(@"^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$");
-
 	private void Rent()
 	{
 		if (string.IsNullOrEmpty(rentalID) || string.IsNullOrEmpty(customerID) || string.IsNullOrEmpty(rentalStatus))
 			return;
-
-		if(sysManagement.FindCustomer(Convert.ToInt32(customerID)) == null)
-		{
-			Application.Current.MainPage.DisplayAlert("Notification", "Invalid customer id", "OK");
-			return;
-		}
 
 		if(sysManagement.FindCustomer(Convert.ToInt32(customerID)).isBanned)
 		{
@@ -276,12 +280,6 @@
 		if(Convert.ToDateTime(rentalDate) >= Convert.ToDateTime(returnDate))
 		{
 			Application.Current.MainPage.DisplayAlert("Error encounter!", "Invalid rental date range (rental date must be larger than return date)", "OK");
-			return;
-		}
-
-		if (sysManagement.FindEquipment(Convert.ToInt32(equipmentID)) == null)
-		{
-			Application.Current.MainPage.DisplayAlert("Notification", "Equipment Not Found", "OK");
 			return;
 		}
 
