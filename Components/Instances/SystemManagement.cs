@@ -330,8 +330,8 @@ namespace VillageRental.Components.Instances
         public void RemoveCategory(int _categoryID)
         {
             foreach(Equipment equipment in equipmentList)
-            {
-                if (equipment.CategoryID == _categoryID)
+			{
+				if (equipment.CategoryID == _categoryID)
                     throw new SystemHandler(304, "There is an existing equipment with this category ID. Deletion cannot perform.");
             }
 
