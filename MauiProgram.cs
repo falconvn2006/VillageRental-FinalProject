@@ -16,17 +16,29 @@ namespace VillageRental
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
-			IConfigurationRoot config = new ConfigurationBuilder()
-				.AddJsonFile("appsettings.json")
-				.Build();
+            string? databaseAddress = string.Empty;
+			string? databaseUsername = string.Empty;
+			string? databasePassword = string.Empty;
+			string? databaseName = string.Empty;
+
+			try
+            {
+				IConfigurationRoot config = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json")
+                    .Build();
+
+				databaseAddress = config["DATABASE_SERVER_ADDRESS"];
+				databaseUsername = config["USERNAME"];
+				databasePassword = config["PASSWORD"];
+				databaseName = config["DATABASE_NAME"];
+			}
+            catch
+            {
+                
+            }
 
 			builder.Services.AddMauiBlazorWebView();
             builder.Services.AddSingleton<SystemManagement>();
-
-			string? databaseAddress = config["DATABASE_SERVER_ADDRESS"];
-			string? databaseUsername = config["USERNAME"];
-			string? databasePassword = config["PASSWORD"];
-			string? databaseName = config["DATABASE_NAME"];
 
 			builder.Services.AddSingleton((db) => new DatabaseManager(databaseAddress, databaseUsername, databasePassword, databaseName));
 

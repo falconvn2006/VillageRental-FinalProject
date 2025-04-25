@@ -101,7 +101,7 @@
 			{
 				<tr>
 					<th scope="row">@information.RentalID</th>
-					<td>@($"{information.CurrentDate.Day}/{information.CurrentDate.Month}/{information.CurrentDate.Year}")</td>
+					<td>@($"{information.CurrentDate.Month}/{information.CurrentDate.Day}/{information.CurrentDate.Year}")</td>
 					<td>@information.CustomerID</td>
 					<td>@information.CustomerLastName</td>
 					<td>
@@ -120,13 +120,13 @@
 					<td>
 						@foreach (RentalItem rentalItem in information.rentalItemList)
 						{
-							<p>@($"{rentalItem.RentalDate.Day}/{rentalItem.RentalDate.Month}/{rentalItem.RentalDate.Year}")</p>
+							<p>@($"{rentalItem.RentalDate.Month}/{rentalItem.RentalDate.Day}/{rentalItem.RentalDate.Year}")</p>
 						}
 					</td>
 					<td>
 						@foreach (RentalItem rentalItem in information.rentalItemList)
 						{
-							<p>@($"{rentalItem.ReturnDate.Day}/{rentalItem.ReturnDate.Month}/{rentalItem.ReturnDate.Year}")</p>
+							<p>@($"{rentalItem.ReturnDate.Month}/{rentalItem.ReturnDate.Day}/{rentalItem.ReturnDate.Year}")</p>
 						}
 					</td>
 					<td>
